@@ -101,6 +101,12 @@ export const clientCategories = ['distribuidor', 'minorista', 'gastronomia', 'su
 export const productCategories = ['chocolate', 'maicena', 'premium', 'caja']
 export const productionStatuses = ['planificado', 'en-progreso', 'completado', 'cancelado']
 
+// IDs de datos de ejemplo para poder detectarlos y eliminarlos
+export const demoClientIds = new Set(initialClients.map(c => c.id))
+export const demoProductIds = new Set(initialProducts.map(p => p.id))
+export const demoMaterialIds = new Set(initialRawMaterials.map(m => m.id))
+export const demoProductionIds = new Set(initialProduction.map(p => p.id))
+
 export const defaultSettings = {
   companyName: 'Ushuaia Alfajores',
   companyPhone: '+54 2901-000000',

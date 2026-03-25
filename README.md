@@ -19,6 +19,7 @@
 - **Exportar CSV** — Descarga los datos de cada sección en formato Excel/CSV.
 - **Respaldo y Restauración** — Exportar e importar todos los datos en un solo archivo.
 - **Configuración personalizable** — Nombre de empresa, logo, categorías, unidades de medida.
+- **Datos de ejemplo eliminables** — El programa incluye datos de demostración que se pueden eliminar con un solo clic desde el Dashboard.
 - **100% offline** — No requiere conexión a internet. Los datos se guardan localmente.
 
 ---

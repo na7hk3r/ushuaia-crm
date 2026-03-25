@@ -47,6 +47,9 @@ Es la pantalla de inicio. Muestra de un vistazo:
 - **Alertas de stock bajo** (productos e insumos que necesitan reposición)
 - **Gráficos** de stock por producto, facturación por cliente y distribución de categorías
 
+### Eliminar datos de ejemplo
+Cuando el programa se instala por primera vez, viene con **datos de demostración** (clientes, productos, insumos y órdenes de producción de ejemplo). En el Dashboard aparece un banner informativo con el botón **"🗑️ Eliminar datos de ejemplo"**. Al hacer clic, se eliminan únicamente los datos de demostración; los datos que hayas agregado vos se conservan. Una vez eliminados, el banner desaparece automáticamente.
+
 ---
 
 ## 👥 Clientes
@@ -151,11 +154,12 @@ Para eliminar, hacé clic en la **×** al lado del nombre.
 
 ## 💡 Consejos útiles
 
-1. **Respaldá tus datos seguido** — Desde Configuración → Guardar Respaldo.
-2. **Usá las categorías** — Ayudan a filtrar y organizar la información.
-3. **Revisá el Dashboard** — Las alertas de stock te avisan cuándo reponer.
-4. **Exportá a CSV** antes de hacer cambios grandes — Te sirve como respaldo rápido de cada sección.
-5. **Personalizá el programa** — Subí tu logo y ajustá los datos de la empresa desde Configuración.
+1. **Eliminá los datos de ejemplo** — Si es tu primera vez, eliminá los datos de demostración desde el Dashboard para empezar con información real.
+2. **Respaldá tus datos seguido** — Desde Configuración → Guardar Respaldo.
+3. **Usá las categorías** — Ayudan a filtrar y organizar la información.
+4. **Revisá el Dashboard** — Las alertas de stock te avisan cuándo reponer.
+5. **Exportá a CSV** antes de hacer cambios grandes — Te sirve como respaldo rápido de cada sección.
+6. **Personalizá el programa** — Subí tu logo y ajustá los datos de la empresa desde Configuración.
 
 ---
 

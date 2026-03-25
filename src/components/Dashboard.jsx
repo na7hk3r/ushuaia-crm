@@ -8,7 +8,7 @@ const CHART_GREEN = '#10B981'
 const CHART_AMBER = '#FBBF24'
 const CHART_PURPLE = '#8B5CF6'
 
-export default function Dashboard({ clients, products, rawMaterials, production, settings }) {
+export default function Dashboard({ clients, products, rawMaterials, production, settings, hasDemoData, onClearDemoData }) {
   const totalClients = clients.length
   const totalRevenue = clients.reduce((sum, c) => sum + c.orders.reduce((s, o) => s + o.total, 0), 0)
   const lowStockProducts = products.filter(p => p.stock <= p.minStock).length
@@ -42,6 +42,21 @@ export default function Dashboard({ clients, products, rawMaterials, production,
           <p>{new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
       </div>
+
+      {hasDemoData && (
+        <div className="demo-banner">
+          <div className="demo-banner-content">
+            <span className="demo-banner-icon">💡</span>
+            <div className="demo-banner-text">
+              <strong>Datos de ejemplo cargados</strong>
+              <p>El programa contiene datos de demostración. Podés eliminarlos para empezar con tu propia información.</p>
+            </div>
+          </div>
+          <button className="btn-danger btn-sm" onClick={onClearDemoData}>
+            🗑️ Eliminar datos de ejemplo
+          </button>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="kpi-grid">
