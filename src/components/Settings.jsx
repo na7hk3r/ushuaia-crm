@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { backupData, restoreData } from '../utils/exportCSV'
 
-export default function Settings({ settings, setSettings, allData, onRestore }) {
+export default function Settings({ settings, setSettings, allData, onRestore, products }) {
   const [newClientCat, setNewClientCat] = useState('')
   const [newProductCat, setNewProductCat] = useState('')
   const [newProdStatus, setNewProdStatus] = useState('')
@@ -74,6 +74,9 @@ export default function Settings({ settings, setSettings, allData, onRestore }) 
     }
   }
 
+  const currency = settings.currency || '$'
+  const productList = products || []
+
   return (
     <div className="page">
       <div className="page-header">
@@ -81,7 +84,7 @@ export default function Settings({ settings, setSettings, allData, onRestore }) 
       </div>
 
       {message && (
-        <div className={`alerts-section ${message.type === 'error' ? '' : ''}`} style={{
+        <div className="alerts-section" style={{
           borderColor: message.type === 'error' ? 'var(--red)' : 'var(--green)',
           borderLeftColor: message.type === 'error' ? 'var(--red)' : 'var(--green)',
           marginBottom: '24px'
@@ -163,6 +166,88 @@ export default function Settings({ settings, setSettings, allData, onRestore }) 
                   🗑️ Quitar logo
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Precios y Moneda ── */}
+        <div className="settings-section">
+          <h3>💲 Precios y Moneda</h3>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Símbolo de moneda</label>
+              <input
+                value={settings.currency || '$'}
+                onChange={e => updateField('currency', e.target.value)}
+                placeholder="$"
+                maxLength={5}
+              />
+            </div>
+            <div className="form-group">
+              <label>Precio por defecto</label>
+              <select value={settings.defaultPriceType || 'retail'} onChange={e => updateField('defaultPriceType', e.target.value)}>
+                <option value="retail">Minorista</option>
+                <option value="wholesale">Mayorista</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>IVA / Impuesto (%)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={settings.taxRate ?? 22}
+                onChange={e => updateField('taxRate', Number(e.target.value))}
+              />
+            </div>
+          </div>
+          {productList.length > 0 && (
+            <div className="settings-price-overview">
+              <strong>Resumen de precios actuales</strong>
+              <div className="price-overview-list">
+                {productList.map(p => {
+                  const retail = p.retailPrice || p.price || 0
+                  const wholesale = p.wholesalePrice || 0
+                  const cost = p.productionCost || 0
+                  const margin = cost > 0 && retail > 0 ? Math.round(((retail - cost) / retail) * 100) : null
+                  return (
+                    <div className="price-overview-row" key={p.id}>
+                      <span className="price-overview-name">{p.name}</span>
+                      <span className="price-overview-prices">
+                        {currency}{retail.toLocaleString()}
+                        {wholesale > 0 && <small> / May: {currency}{wholesale.toLocaleString()}</small>}
+                        {margin !== null && <small className={`price-margin ${margin >= 40 ? 'margin-good' : margin >= 20 ? 'margin-ok' : 'margin-low'}`}> {margin}%</small>}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Entregas ── */}
+        <div className="settings-section">
+          <h3>🚚 Entregas</h3>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Días de entrega por defecto</label>
+              <input
+                type="number"
+                min="0"
+                max="60"
+                value={settings.defaultDeliveryDays ?? 3}
+                onChange={e => updateField('defaultDeliveryDays', Number(e.target.value))}
+              />
+              <small style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Días desde el pedido para sugerir fecha de entrega</small>
+            </div>
+            <div className="form-group">
+              <label>Alertas de stock</label>
+              <select value={settings.stockAlertEnabled !== false ? 'true' : 'false'} onChange={e => updateField('stockAlertEnabled', e.target.value === 'true')}>
+                <option value="true">Activadas</option>
+                <option value="false">Desactivadas</option>
+              </select>
+              <small style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Mostrar alertas cuando el stock esté por debajo del mínimo</small>
             </div>
           </div>
         </div>

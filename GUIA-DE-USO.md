@@ -28,12 +28,13 @@ El programa tiene un **menú a la izquierda** (barra lateral) con las secciones 
 
 | Sección | ¿Para qué sirve? |
 |---------|-------------------|
-| 📊 **Dashboard** | Vista general del negocio: clientes, facturación, producción y alertas de stock |
+| 📊 **Dashboard** | Vista general del negocio: KPIs, entregas, calendario, gráfico de ingresos, top clientes y producción |
+| 🔔 **Alertas** | Centro de alertas: pedidos vencidos, entregas del día, stock bajo, producción activa |
 | 👥 **Clientes** | Agregar, editar y consultar tu lista de clientes con historial de pedidos |
 | 🏭 **Producción** | Registrar órdenes de producción y su estado (planificado, en progreso, completado) |
-| 📦 **Stock** | Control de inventario de productos terminados |
+| 📦 **Stock** | Control de inventario de productos terminados con precios y márgenes |
 | 🧈 **Materia Prima** | Gestión de insumos y materias primas |
-| ⚙️ **Configuración** | Personalizar el programa: datos de la empresa, logo, categorías, respaldos |
+| ⚙️ **Configuración** | Personalizar el programa: datos de la empresa, logo, precios, entregas, categorías, respaldos |
 
 ---
 
@@ -41,18 +42,42 @@ El programa tiene un **menú a la izquierda** (barra lateral) con las secciones 
 
 Es la pantalla de inicio. Muestra de un vistazo:
 
-- **Cantidad de clientes activos**
-- **Facturación total acumulada**
-- **Órdenes de producción pendientes**
-- **Alertas de stock bajo** (productos e insumos que necesitan reposición)
-- **Gráficos** de stock por producto, facturación por cliente y distribución de categorías
+- **Tarjetas KPI** — Clientes, Ingresos del mes (con tendencia ↑↓ vs. mes anterior), Ganancia estimada, Entregas pendientes, Alertas de stock y Producción activa. Cada tarjeta es clickeable y te lleva a la sección correspondiente.
+- **Entregas (7 días)** — Lista de entregas próximas con botón para abrir la ruta en Google Maps.
+- **Calendario** — Mini calendario interactivo que marca los días con entregas. Hacé clic en un día para ver los detalles.
+- **Top Clientes** — Ranking de los 5 mejores clientes por facturación. Hacé clic en el título para ir a Clientes.
+- **Producción** — Resumen rápido: órdenes en progreso, planificadas, completadas y unidades totales.
+- **Gráfico de Ingresos y Ganancia** — Barras duales (ingresos + ganancia). Configurable: elegí el mes de inicio y la cantidad de meses (3, 6, 9 o 12).
+- **Alertas de Reposición** — Productos e insumos con stock bajo, al lado del gráfico.
+
+### Navegación rápida desde el Dashboard
+Hacé clic en cualquier tarjeta KPI o título de sección para ir directamente a la página correspondiente (Clientes, Alertas, Producción, etc.). El cursor cambia a una mano para indicar que es clickeable.
+
+### Abrir ruta en el mapa
+En la sección "Próximas Entregas" podés hacer clic en **"🗺️ Abrir ruta"** para abrir Google Maps con todas las direcciones de entrega como paradas. También podés hacer clic en **📍** en cada entrega individual para ver la ubicación exacta del cliente.
 
 ### Eliminar datos de ejemplo
 Cuando el programa se instala por primera vez, viene con **datos de demostración** (clientes, productos, insumos y órdenes de producción de ejemplo). En el Dashboard aparece un banner informativo con el botón **"🗑️ Eliminar datos de ejemplo"**. Al hacer clic, se eliminan únicamente los datos de demostración; los datos que hayas agregado vos se conservan. Una vez eliminados, el banner desaparece automáticamente.
 
 ---
 
-## 👥 Clientes
+## � Alertas
+
+Centro de alertas unificado. Muestra todas las situaciones que requieren tu atención:
+
+- **Pedidos vencidos** — Entregas cuya fecha ya pasó y no se marcaron como completadas.
+- **Entregas de hoy** — Pedidos que deben entregarse hoy.
+- **Stock bajo de productos** — Productos con stock por debajo del mínimo.
+- **Stock bajo de materia prima** — Insumos que necesitan reposición.
+- **Próximas entregas** — Entregas programadas para los próximos 7 días.
+- **Producción activa** — Órdenes en progreso.
+- **Producción planificada** — Órdenes pendientes de iniciar.
+
+Cada sección se puede **colapsar/expandir** haciendo clic en su encabezado (aparece un ▾ que rota al colapsar).
+
+---
+
+## �👥 Clientes
 
 ### Agregar un cliente
 1. Hacé clic en **"+ Nuevo Cliente"**
@@ -63,7 +88,19 @@ Cuando el programa se instala por primera vez, viene con **datos de demostració
 - Hacé clic en el **nombre del cliente** para ver su información completa y el historial de pedidos.
 
 ### Registrar un pedido
-- Dentro de la ficha del cliente, hacé clic en **"+ Agregar pedido"** e ingresá el monto.
+1. Dentro de la ficha del cliente, hacé clic en **"+ Agregar pedido"**.
+2. Se abre un formulario inline con los campos:
+   - **Producto**: seleccioná de la lista de productos existentes
+   - **Cantidad (cajas/bandejas)**: ingresá cuántas unidades
+   - **Total ($)**: se calcula automáticamente según el precio del producto × cantidad (podés editarlo manualmente)
+   - **Fecha de entrega**: opcional, para agendar cuándo entregar el pedido
+3. Hacé clic en **"Confirmar pedido"**.
+
+### Marcar entrega como completada
+- En el historial de pedidos del cliente, los pedidos con fecha de entrega muestran un badge de estado (📦 Pendiente o ✅ Entregado). Hacé clic en el badge para cambiar el estado.
+
+### Ver cliente en el mapa
+- En la ficha del cliente, debajo de la dirección aparece el botón **"📍 Ver en mapa"**. Abre la ubicación en Google Maps.
 
 ### Exportar a Excel
 - Hacé clic en **"📄 Exportar CSV"** para descargar la lista de clientes. Ese archivo lo podés abrir directamente con Excel o cualquier planilla de cálculo.
@@ -91,7 +128,8 @@ Podés editar o eliminar cualquier orden desde la tabla.
 
 Acá controlás el inventario de tus productos terminados (alfajores).
 
-- **Agregar producto**: clic en "+ Nuevo Producto", completá nombre, descripción, categoría, precio, stock actual y stock mínimo.
+- **Agregar producto**: clic en "+ Nuevo Producto", completá nombre, descripción, categoría, stock actual, stock mínimo y precios.
+- **Precios**: cada producto tiene precio minorista, precio mayorista y costo de producción. El margen de ganancia se calcula automáticamente.
 - **Ajustar stock rápido**: en productos con stock bajo aparece un botón para sumar unidades directamente.
 - **Alerta automática**: cuando un producto tiene menos unidades que el stock mínimo, se muestra una alerta.
 
@@ -133,6 +171,17 @@ El nombre que pongas acá se muestra en la barra lateral y en el Dashboard.
 - El logo reemplaza al emoji 🏔️ en la barra lateral.
 - Si querés volver al emoji, hacé clic en **"🗑️ Quitar logo"**.
 
+### Precios y Moneda
+Podés configurar:
+- **Moneda** (símbolo que se muestra, ej: $, US$)
+- **Tipo de precio por defecto** para nuevos pedidos (minorista o mayorista)
+- **Tasa de impuesto** (IVA, se muestra como referencia)
+- Vista general de precios de todos los productos
+
+### Entregas
+- **Días por defecto para entrega** — Se usa como sugerencia al crear pedidos
+- **Alertas de stock habilitadas** — Activar/desactivar las alertas de stock bajo
+
 ### Categorías personalizables
 Podés agregar o quitar:
 - **Categorías de clientes** (ej: distribuidor, minorista, gastronomía)
@@ -157,9 +206,11 @@ Para eliminar, hacé clic en la **×** al lado del nombre.
 1. **Eliminá los datos de ejemplo** — Si es tu primera vez, eliminá los datos de demostración desde el Dashboard para empezar con información real.
 2. **Respaldá tus datos seguido** — Desde Configuración → Guardar Respaldo.
 3. **Usá las categorías** — Ayudan a filtrar y organizar la información.
-4. **Revisá el Dashboard** — Las alertas de stock te avisan cuándo reponer.
-5. **Exportá a CSV** antes de hacer cambios grandes — Te sirve como respaldo rápido de cada sección.
-6. **Personalizá el programa** — Subí tu logo y ajustá los datos de la empresa desde Configuración.
+4. **Revisá el Dashboard** — Las alertas de stock te avisan cuándo reponer. El calendario de entregas muestra los días con entregas programadas.
+5. **Registrá los pedidos con fecha de entrega** — Así aparecen en el calendario del Dashboard y podés planificar las entregas de la semana.
+6. **Usá el mapa** — Desde el Dashboard o la ficha de un cliente podés abrir Google Maps para planificar las rutas de entrega.
+7. **Exportá a CSV** antes de hacer cambios grandes — Te sirve como respaldo rápido de cada sección.
+8. **Personalizá el programa** — Subí tu logo y ajustá los datos de la empresa desde Configuración.
 
 ---
 
@@ -179,4 +230,4 @@ No. El programa funciona completamente sin conexión a internet.
 
 ---
 
-*Ushuaia CRM v1.0.0 — Hecho para la gestión de alfajores artesanales 🏔️*
+*Ushuaia CRM v1.1.0 — Hecho para la gestión de alfajores artesanales 🏔️*

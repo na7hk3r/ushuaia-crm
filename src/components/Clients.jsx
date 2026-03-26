@@ -6,13 +6,15 @@ const emptyClient = {
   name: '', contact: '', email: '', phone: '', address: '', category: 'minorista', notes: '', orders: []
 }
 
-export default function Clients({ clients, setClients, settings }) {
+export default function Clients({ clients, setClients, settings, products }) {
   const clientCategories = settings?.clientCategories || ['distribuidor', 'minorista', 'gastronomia', 'supermercado', 'mayorista']
   const [view, setView] = useState('list') // list | form | detail
   const [selected, setSelected] = useState(null)
   const [form, setForm] = useState({ ...emptyClient })
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState('')
+  const [showOrderForm, setShowOrderForm] = useState(false)
+  const [orderForm, setOrderForm] = useState({ product: '', quantity: '', total: '', deliveryDate: '', priceType: 'retail' })
 
   const filtered = clients.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -57,18 +59,83 @@ export default function Clients({ clients, setClients, settings }) {
     }
   }
 
-  function handleAddOrder() {
-    const totalStr = prompt('Monto total del pedido:')
-    if (!totalStr) return
-    const total = Number(totalStr)
-    if (isNaN(total) || total <= 0) return
+  function getProductPrice(prod, priceType) {
+    if (!prod) return 0
+    if (priceType === 'wholesale') return prod.wholesalePrice || prod.retailPrice || prod.price || 0
+    return prod.retailPrice || prod.price || 0
+  }
+
+  function handleProductChange(productName) {
+    const prod = (products || []).find(p => p.name === productName)
+    const qty = Number(orderForm.quantity) || 1
+    const unitPrice = getProductPrice(prod, orderForm.priceType)
+    setOrderForm(prev => ({
+      ...prev,
+      product: productName,
+      total: prod ? String(unitPrice * qty) : prev.total,
+    }))
+  }
+
+  function handleQuantityChange(val) {
+    const qty = Number(val) || 0
+    const prod = (products || []).find(p => p.name === orderForm.product)
+    const unitPrice = getProductPrice(prod, orderForm.priceType)
+    setOrderForm(prev => ({
+      ...prev,
+      quantity: val,
+      total: prod ? String(unitPrice * qty) : prev.total,
+    }))
+  }
+
+  function handlePriceTypeChange(priceType) {
+    const prod = (products || []).find(p => p.name === orderForm.product)
+    const qty = Number(orderForm.quantity) || 1
+    const unitPrice = getProductPrice(prod, priceType)
+    setOrderForm(prev => ({
+      ...prev,
+      priceType,
+      total: prod ? String(unitPrice * qty) : prev.total,
+    }))
+  }
+
+  function handleAddOrder(e) {
+    e.preventDefault()
+    const total = Number(orderForm.total)
+    if (!orderForm.product || !orderForm.quantity || isNaN(total) || total <= 0) return
     const date = new Date().toISOString().slice(0, 10)
+    const newOrder = {
+      date,
+      product: orderForm.product,
+      quantity: Number(orderForm.quantity),
+      total,
+      deliveryDate: orderForm.deliveryDate || '',
+      delivered: false,
+    }
     setClients(prev => prev.map(c =>
       c.id === selected.id
-        ? { ...c, orders: [...c.orders, { date, total }] }
+        ? { ...c, orders: [...c.orders, newOrder] }
         : c
     ))
-    setSelected(prev => ({ ...prev, orders: [...prev.orders, { date, total }] }))
+    setSelected(prev => ({ ...prev, orders: [...prev.orders, newOrder] }))
+    setOrderForm({ product: '', quantity: '', total: '', deliveryDate: '', priceType: 'retail' })
+    setShowOrderForm(false)
+  }
+
+  function toggleDelivered(orderIndex) {
+    setClients(prev => prev.map(c => {
+      if (c.id !== selected.id) return c
+      const orders = c.orders.map((o, i) => i === orderIndex ? { ...o, delivered: !o.delivered } : o)
+      return { ...c, orders }
+    }))
+    setSelected(prev => ({
+      ...prev,
+      orders: prev.orders.map((o, i) => i === orderIndex ? { ...o, delivered: !o.delivered } : o),
+    }))
+  }
+
+  function openMap(address) {
+    if (!address) return
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank')
   }
 
   if (view === 'form') {
@@ -144,6 +211,7 @@ export default function Clients({ clients, setClients, settings }) {
             <div className="detail-row"><span>Email:</span><strong>{selected.email}</strong></div>
             <div className="detail-row"><span>Teléfono:</span><strong>{selected.phone}</strong></div>
             <div className="detail-row"><span>Dirección:</span><strong>{selected.address}</strong></div>
+            {selected.address && <button className="btn-sm" onClick={() => openMap(selected.address)} style={{ marginTop: 4, marginBottom: 8 }}>📍 Ver en mapa</button>}
             <div className="detail-row"><span>Categoría:</span><span className="badge">{selected.category}</span></div>
             <div className="detail-row"><span>Cliente desde:</span><strong>{selected.createdAt}</strong></div>
             {selected.notes && <div className="detail-notes"><span>Notas:</span><p>{selected.notes}</p></div>}
@@ -151,9 +219,70 @@ export default function Clients({ clients, setClients, settings }) {
           <div className="detail-card">
             <div className="detail-card-header">
               <h3>Pedidos ({selected.orders.length})</h3>
-              <button className="btn-sm" onClick={handleAddOrder}>+ Agregar pedido</button>
+              <button className="btn-sm" onClick={() => setShowOrderForm(!showOrderForm)}>
+                {showOrderForm ? '✕ Cancelar' : '+ Agregar pedido'}
+              </button>
             </div>
             <div className="detail-row"><span>Facturación total:</span><strong className="revenue">${totalRevenue.toLocaleString()}</strong></div>
+
+            {showOrderForm && (
+              <form className="order-inline-form" onSubmit={handleAddOrder}>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Producto</label>
+                    <select value={orderForm.product} onChange={e => handleProductChange(e.target.value)} required>
+                      <option value="">Seleccionar...</option>
+                      {(products || []).map(p => {
+                        const uInfo = (p.unitsPerBox || 1) > 1 ? ` (${p.unitsPerBox} alfajores)` : ''
+                        return <option key={p.id} value={p.name}>{p.name}{uInfo}</option>
+                      })}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Tipo de precio</label>
+                    <select value={orderForm.priceType} onChange={e => handlePriceTypeChange(e.target.value)}>
+                      <option value="retail">Minorista</option>
+                      <option value="wholesale">Mayorista</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Cantidad (cajas/unidades)</label>
+                    <input type="number" min="1" value={orderForm.quantity} onChange={e => handleQuantityChange(e.target.value)} required placeholder="Ej: 10" />
+                  </div>
+                  <div className="form-group">
+                    <label>Total ($)</label>
+                    <input type="number" min="0" step="0.01" value={orderForm.total} onChange={e => setOrderForm(prev => ({ ...prev, total: e.target.value }))} required />
+                  </div>
+                  <div className="form-group">
+                    <label>Fecha de entrega</label>
+                    <input type="date" value={orderForm.deliveryDate} onChange={e => setOrderForm(prev => ({ ...prev, deliveryDate: e.target.value }))} />
+                  </div>
+                </div>
+                {(() => {
+                  const prod = (products || []).find(p => p.name === orderForm.product)
+                  if (!prod) return null
+                  const units = prod.unitsPerBox || 1
+                  const retail = prod.retailPrice || prod.price || 0
+                  const wholesale = prod.wholesalePrice || 0
+                  const cost = prod.productionCost || 0
+                  const selectedPrice = orderForm.priceType === 'wholesale' ? wholesale : retail
+                  const qty = Number(orderForm.quantity) || 0
+                  const totalAlf = units * qty
+                  const profit = cost > 0 && qty > 0 ? (selectedPrice - cost) * qty : null
+                  return (
+                    <div className="order-price-summary">
+                      <span>📦 {totalAlf} alfajor{totalAlf !== 1 ? 'es' : ''} total{units > 1 ? ` (${qty} × ${units})` : ''}</span>
+                      <span>💲 Precio unitario: ${selectedPrice.toLocaleString()}{wholesale > 0 && orderForm.priceType === 'retail' ? ` · Mayor: $${wholesale.toLocaleString()}` : ''}</span>
+                      {profit !== null && <span className="profit-hint">📊 Ganancia estimada: <strong>${profit.toLocaleString()}</strong> ({Math.round(((selectedPrice - cost) / selectedPrice) * 100)}% margen)</span>}
+                    </div>
+                  )
+                })()}
+                <div className="form-actions">
+                  <button type="submit" className="btn-primary">Confirmar pedido</button>
+                </div>
+              </form>
+            )}
+
             {chartData.length > 1 && (
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={chartData}>
@@ -166,12 +295,24 @@ export default function Clients({ clients, setClients, settings }) {
               </ResponsiveContainer>
             )}
             <div className="orders-list">
-              {[...selected.orders].reverse().map((o, i) => (
-                <div className="order-row" key={i}>
-                  <span>{o.date}</span>
-                  <strong>${o.total.toLocaleString()}</strong>
-                </div>
-              ))}
+              {[...selected.orders].reverse().map((o, i) => {
+                const realIndex = selected.orders.length - 1 - i
+                return (
+                  <div className={`order-row${o.delivered === false ? ' order-pending' : ''}`} key={i}>
+                    <span>{o.date}</span>
+                    <span className="order-product">{o.product || '-'}</span>
+                    <span>{o.quantity ? `${o.quantity} uds` : '-'}</span>
+                    <strong>${o.total.toLocaleString()}</strong>
+                    {o.deliveryDate && (
+                      <span className={`badge ${o.delivered ? 'badge-green' : 'badge-amber'}`} style={{ cursor: 'pointer' }}
+                        onClick={() => toggleDelivered(realIndex)}
+                        title={o.delivered ? 'Marcar como pendiente' : 'Marcar como entregado'}>
+                        {o.delivered ? '✅' : '📦'} {o.deliveryDate.slice(5)}
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -222,6 +363,7 @@ export default function Clients({ clients, setClients, settings }) {
               <th>Contacto</th>
               <th>Categoría</th>
               <th>Pedidos</th>
+              <th>Pendientes</th>
               <th>Facturación</th>
               <th>Acciones</th>
             </tr>
@@ -233,6 +375,9 @@ export default function Clients({ clients, setClients, settings }) {
                 <td>{c.contact}</td>
                 <td><span className="badge">{c.category}</span></td>
                 <td>{c.orders.length}</td>
+                <td>
+                  {(() => { const p = c.orders.filter(o => o.deliveryDate && !o.delivered).length; return p > 0 ? <span className="badge badge-amber">{p}</span> : '—' })()}
+                </td>
                 <td>${c.orders.reduce((s, o) => s + o.total, 0).toLocaleString()}</td>
                 <td className="td-actions">
                   <button className="btn-sm" onClick={() => openDetail(c)}>Ver</button>
@@ -240,7 +385,7 @@ export default function Clients({ clients, setClients, settings }) {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={6} className="empty">No se encontraron clientes</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={7} className="empty">No se encontraron clientes</td></tr>}
           </tbody>
         </table>
       </div>

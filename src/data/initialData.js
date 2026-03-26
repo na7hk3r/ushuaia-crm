@@ -1,67 +1,71 @@
-const today = new Date().toISOString().slice(0, 10)
-
 export const initialClients = [
   {
     id: 1, name: 'Distribuidora del Sur', contact: 'Martín López', email: 'martin@delsur.com',
-    phone: '2901-445566', address: 'Av. San Martín 450, Ushuaia',
+    phone: '099-445566', address: 'Av. 18 de Julio 1234, Montevideo',
     category: 'distribuidor', notes: 'Pedidos regulares cada 2 semanas', createdAt: '2025-11-10',
     orders: [
-      { date: '2026-01-15', total: 85000 },
-      { date: '2026-02-01', total: 92000 },
-      { date: '2026-02-15', total: 78000 },
-      { date: '2026-03-01', total: 105000 },
+      { date: '2026-01-15', product: 'Caja x6 Surtidos', quantity: 20, total: 14400, deliveryDate: '2026-01-17', delivered: true },
+      { date: '2026-02-01', product: 'Caja x12 Premium', quantity: 10, total: 18000, deliveryDate: '2026-02-03', delivered: true },
+      { date: '2026-02-15', product: 'Caja x6 Surtidos', quantity: 15, total: 10800, deliveryDate: '2026-02-17', delivered: true },
+      { date: '2026-03-01', product: 'Caja x12 Premium', quantity: 12, total: 21600, deliveryDate: '2026-03-03', delivered: true },
+      { date: '2026-03-20', product: 'Caja x6 Surtidos', quantity: 25, total: 18000, deliveryDate: '2026-03-28', delivered: false },
     ]
   },
   {
     id: 2, name: 'Kiosco El Faro', contact: 'Lucía Fernández', email: 'lucia@elfaro.com',
-    phone: '2901-223344', address: 'Gobernador Paz 120, Ushuaia',
+    phone: '098-223344', address: 'Rbla. 25 de Agosto 560, Montevideo',
     category: 'minorista', notes: 'Prefiere alfajores de chocolate', createdAt: '2025-12-05',
     orders: [
-      { date: '2026-01-20', total: 15000 },
-      { date: '2026-02-10', total: 18000 },
-      { date: '2026-03-05', total: 22000 },
+      { date: '2026-01-20', product: 'Alfajor de Chocolate', quantity: 24, total: 3120, deliveryDate: '2026-01-21', delivered: true },
+      { date: '2026-02-10', product: 'Alfajor de Chocolate', quantity: 36, total: 4680, deliveryDate: '2026-02-11', delivered: true },
+      { date: '2026-03-05', product: 'Alfajor de Maicena', quantity: 30, total: 3300, deliveryDate: '2026-03-06', delivered: true },
+      { date: '2026-03-15', product: 'Alfajor Triple', quantity: 12, total: 2280, deliveryDate: '2026-03-20', delivered: false },
+      { date: '2026-03-22', product: 'Alfajor de Chocolate', quantity: 48, total: 6240, deliveryDate: '2026-03-27', delivered: false },
     ]
   },
   {
-    id: 3, name: 'Hotel Los Cauquenes', contact: 'Roberto Sánchez', email: 'compras@cauquenes.com',
-    phone: '2901-667788', address: 'De los Cauquenes 3802, Ushuaia',
+    id: 3, name: 'Hotel Esplendor', contact: 'Roberto Sánchez', email: 'compras@esplendor.com',
+    phone: '099-667788', address: 'Rbla. Gral. Artigas 3802, Montevideo',
     category: 'gastronomia', notes: 'Servicio de amenities para huéspedes', createdAt: '2026-01-15',
     orders: [
-      { date: '2026-02-01', total: 45000 },
-      { date: '2026-03-01', total: 52000 },
+      { date: '2026-02-01', product: 'Caja x12 Premium', quantity: 8, total: 14400, deliveryDate: '2026-02-03', delivered: true },
+      { date: '2026-03-01', product: 'Caja x12 Premium', quantity: 10, total: 18000, deliveryDate: '2026-03-03', delivered: true },
+      { date: '2026-03-25', product: 'Caja x12 Premium', quantity: 12, total: 21600, deliveryDate: '2026-03-30', delivered: false },
     ]
   },
   {
-    id: 4, name: 'Supermercado La Anónima', contact: 'Pedro Gómez', email: 'proveedores@laano.com',
-    phone: '2901-112233', address: 'Av. Maipú 800, Ushuaia',
-    category: 'supermercado', notes: 'Requiere factura A - Contrato trimestral', createdAt: '2025-10-20',
+    id: 4, name: 'Supermercado Disco', contact: 'Pedro Gómez', email: 'proveedores@disco.com.uy',
+    phone: '099-112233', address: 'Av. Italia 3800, Montevideo',
+    category: 'supermercado', notes: 'Requiere factura - Contrato trimestral', createdAt: '2025-10-20',
     orders: [
-      { date: '2026-01-05', total: 180000 },
-      { date: '2026-01-20', total: 165000 },
-      { date: '2026-02-05', total: 195000 },
-      { date: '2026-02-20', total: 210000 },
-      { date: '2026-03-05', total: 188000 },
+      { date: '2026-01-05', product: 'Caja x6 Surtidos', quantity: 50, total: 36000, deliveryDate: '2026-01-07', delivered: true },
+      { date: '2026-01-20', product: 'Caja x6 Surtidos', quantity: 40, total: 28800, deliveryDate: '2026-01-22', delivered: true },
+      { date: '2026-02-05', product: 'Caja x12 Premium', quantity: 20, total: 36000, deliveryDate: '2026-02-07', delivered: true },
+      { date: '2026-02-20', product: 'Caja x6 Surtidos', quantity: 45, total: 32400, deliveryDate: '2026-02-22', delivered: true },
+      { date: '2026-03-05', product: 'Caja x12 Premium', quantity: 25, total: 45000, deliveryDate: '2026-03-07', delivered: true },
+      { date: '2026-03-18', product: 'Caja x6 Surtidos', quantity: 60, total: 43200, deliveryDate: '2026-03-26', delivered: false },
     ]
   },
   {
-    id: 5, name: 'Café del Beagle', contact: 'Ana Torres', email: 'ana@cafedelbeagle.com',
-    phone: '2901-998877', address: 'Av. Maipú 302, Ushuaia',
+    id: 5, name: 'Café del Puerto', contact: 'Ana Torres', email: 'ana@cafedelpuerto.com',
+    phone: '091-998877', address: 'Rambla 25 de Agosto 302, Montevideo',
     category: 'gastronomia', notes: 'Vende alfajores individuales en mostrador', createdAt: '2026-02-01',
     orders: [
-      { date: '2026-02-15', total: 12000 },
-      { date: '2026-03-10', total: 14500 },
+      { date: '2026-02-15', product: 'Alfajor Triple', quantity: 20, total: 3800, deliveryDate: '2026-02-16', delivered: true },
+      { date: '2026-03-10', product: 'Alfajor de Frutos Rojos', quantity: 24, total: 4080, deliveryDate: '2026-03-11', delivered: true },
+      { date: '2026-03-24', product: 'Alfajor Triple', quantity: 30, total: 5700, deliveryDate: '2026-03-29', delivered: false },
     ]
   },
 ]
 
 export const initialProducts = [
-  { id: 1, name: 'Alfajor de Chocolate', description: 'Chocolate negro, dulce de leche', price: 950, category: 'chocolate', stock: 240, minStock: 100 },
-  { id: 2, name: 'Alfajor de Maicena', description: 'Maicena clásica, dulce de leche, coco', price: 800, category: 'maicena', stock: 180, minStock: 80 },
-  { id: 3, name: 'Alfajor Blanco', description: 'Chocolate blanco, mousse de DDL', price: 1050, category: 'chocolate', stock: 45, minStock: 60 },
-  { id: 4, name: 'Alfajor Triple', description: 'Triple chocolate, dulce de leche', price: 1400, category: 'premium', stock: 150, minStock: 50 },
-  { id: 5, name: 'Alfajor de Frutos Rojos', description: 'Chocolate, mermelada de frutos rojos', price: 1200, category: 'premium', stock: 30, minStock: 40 },
-  { id: 6, name: 'Caja x6 Surtidos', description: 'Mix de variedades clásicas', price: 5200, category: 'caja', stock: 65, minStock: 30 },
-  { id: 7, name: 'Caja x12 Premium', description: 'Selección premium para regalo', price: 12800, category: 'caja', stock: 20, minStock: 15 },
+  { id: 1, name: 'Alfajor de Chocolate', description: 'Chocolate negro, dulce de leche', unitsPerBox: 1, retailPrice: 130, wholesalePrice: 95, productionCost: 45, price: 130, category: 'chocolate', stock: 240, minStock: 100 },
+  { id: 2, name: 'Alfajor de Maicena', description: 'Maicena clásica, dulce de leche, coco', unitsPerBox: 1, retailPrice: 110, wholesalePrice: 80, productionCost: 38, price: 110, category: 'maicena', stock: 180, minStock: 80 },
+  { id: 3, name: 'Alfajor Blanco', description: 'Chocolate blanco, mousse de DDL', unitsPerBox: 1, retailPrice: 150, wholesalePrice: 110, productionCost: 55, price: 150, category: 'chocolate', stock: 45, minStock: 60 },
+  { id: 4, name: 'Alfajor Triple', description: 'Triple chocolate, dulce de leche', unitsPerBox: 1, retailPrice: 190, wholesalePrice: 140, productionCost: 65, price: 190, category: 'premium', stock: 150, minStock: 50 },
+  { id: 5, name: 'Alfajor de Frutos Rojos', description: 'Chocolate, mermelada de frutos rojos', unitsPerBox: 1, retailPrice: 170, wholesalePrice: 125, productionCost: 60, price: 170, category: 'premium', stock: 30, minStock: 40 },
+  { id: 6, name: 'Caja x6 Surtidos', description: 'Mix de variedades clásicas', unitsPerBox: 6, retailPrice: 720, wholesalePrice: 530, productionCost: 250, price: 720, category: 'caja', stock: 65, minStock: 30 },
+  { id: 7, name: 'Caja x12 Premium', description: 'Selección premium para regalo', unitsPerBox: 12, retailPrice: 1800, wholesalePrice: 1350, productionCost: 620, price: 1800, category: 'caja', stock: 20, minStock: 15 },
 ]
 
 export const initialRawMaterials = [
@@ -88,15 +92,6 @@ export const initialProduction = [
   { id: 7, product: 'Caja x12 Premium', quantity: 25, date: '2026-03-21', status: 'planificado' },
 ]
 
-export const monthlySales = [
-  { month: 'Oct', ventas: 420000 },
-  { month: 'Nov', ventas: 510000 },
-  { month: 'Dic', ventas: 680000 },
-  { month: 'Ene', ventas: 590000 },
-  { month: 'Feb', ventas: 720000 },
-  { month: 'Mar', ventas: 385000 },
-]
-
 export const clientCategories = ['distribuidor', 'minorista', 'gastronomia', 'supermercado', 'mayorista']
 export const productCategories = ['chocolate', 'maicena', 'premium', 'caja']
 export const productionStatuses = ['planificado', 'en-progreso', 'completado', 'cancelado']
@@ -117,4 +112,12 @@ export const defaultSettings = {
   productCategories: ['chocolate', 'maicena', 'premium', 'caja'],
   productionStatuses: ['planificado', 'en-progreso', 'completado', 'cancelado'],
   materialUnits: ['kg', 'litros', 'unidades', 'rollos', 'paquetes'],
+  // Precios y moneda
+  currency: '$',
+  defaultPriceType: 'retail',
+  taxRate: 22,
+  // Entregas
+  defaultDeliveryDays: 3,
+  // Alertas de stock
+  stockAlertEnabled: true,
 }

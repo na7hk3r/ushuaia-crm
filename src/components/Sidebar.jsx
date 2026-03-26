@@ -1,5 +1,6 @@
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+  { id: 'alerts', label: 'Alertas', icon: '🔔' },
   { id: 'clients', label: 'Clientes', icon: '👥' },
   { id: 'production', label: 'Producción', icon: '🏭' },
   { id: 'stock', label: 'Stock', icon: '📦' },

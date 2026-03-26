@@ -9,6 +9,7 @@ import Production from './components/Production'
 import Stock from './components/Stock'
 import Materials from './components/Materials'
 import Settings from './components/Settings'
+import Alerts from './components/Alerts'
 
 function App() {
   const [page, setPage] = useState('dashboard')
@@ -45,8 +46,10 @@ function App() {
 
   function renderPage() {
     switch (page) {
+      case 'alerts':
+        return <Alerts clients={clients} products={products} rawMaterials={rawMaterials} production={production} onNavigate={setPage} />
       case 'clients':
-        return <Clients clients={clients} setClients={setClients} settings={settings} />
+        return <Clients clients={clients} setClients={setClients} settings={settings} products={products} />
       case 'production':
         return <Production production={production} setProduction={setProduction} products={products} settings={settings} />
       case 'stock':
@@ -54,9 +57,9 @@ function App() {
       case 'materials':
         return <Materials materials={rawMaterials} setMaterials={setRawMaterials} settings={settings} />
       case 'settings':
-        return <Settings settings={settings} setSettings={setSettings} allData={allData} onRestore={handleRestore} />
+        return <Settings settings={settings} setSettings={setSettings} allData={allData} onRestore={handleRestore} products={products} />
       default:
-        return <Dashboard clients={clients} products={products} rawMaterials={rawMaterials} production={production} settings={settings} hasDemoData={hasDemoData} onClearDemoData={handleClearDemoData} />
+        return <Dashboard clients={clients} products={products} rawMaterials={rawMaterials} production={production} settings={settings} hasDemoData={hasDemoData} onClearDemoData={handleClearDemoData} onNavigate={setPage} />
     }
   }
 

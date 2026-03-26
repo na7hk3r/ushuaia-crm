@@ -4,7 +4,7 @@ import { exportCSV } from '../utils/exportCSV'
 export default function Stock({ products, setProducts, settings }) {
   const productCategories = settings?.productCategories || ['chocolate', 'maicena', 'premium', 'caja']
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ name: '', description: '', price: '', category: 'chocolate', stock: '', minStock: '' })
+  const [form, setForm] = useState({ name: '', description: '', unitsPerBox: '', retailPrice: '', wholesalePrice: '', productionCost: '', category: 'chocolate', stock: '', minStock: '' })
   const [editId, setEditId] = useState(null)
   const [filterCat, setFilterCat] = useState('')
 
@@ -12,20 +12,37 @@ export default function Stock({ products, setProducts, settings }) {
   const lowStock = products.filter(p => p.stock <= p.minStock)
 
   function openNew() {
-    setForm({ name: '', description: '', price: '', category: 'chocolate', stock: '', minStock: '' })
+    setForm({ name: '', description: '', unitsPerBox: '', retailPrice: '', wholesalePrice: '', productionCost: '', category: 'chocolate', stock: '', minStock: '' })
     setEditId(null)
     setShowForm(true)
   }
 
   function openEdit(item) {
-    setForm({ name: item.name, description: item.description, price: item.price, category: item.category, stock: item.stock, minStock: item.minStock })
+    setForm({
+      name: item.name, description: item.description,
+      unitsPerBox: item.unitsPerBox ?? '',
+      retailPrice: item.retailPrice ?? item.price ?? '',
+      wholesalePrice: item.wholesalePrice ?? '',
+      productionCost: item.productionCost ?? '',
+      category: item.category, stock: item.stock, minStock: item.minStock,
+    })
     setEditId(item.id)
     setShowForm(true)
   }
 
   function handleSave(e) {
     e.preventDefault()
-    const entry = { ...form, price: Number(form.price), stock: Number(form.stock), minStock: Number(form.minStock) }
+    const retailP = Number(form.retailPrice) || 0
+    const entry = {
+      ...form,
+      unitsPerBox: Number(form.unitsPerBox) || 1,
+      retailPrice: retailP,
+      wholesalePrice: Number(form.wholesalePrice) || 0,
+      productionCost: Number(form.productionCost) || 0,
+      price: retailP,
+      stock: Number(form.stock),
+      minStock: Number(form.minStock),
+    }
     if (editId) {
       setProducts(prev => prev.map(p => p.id === editId ? { ...entry, id: editId } : p))
     } else {
@@ -57,7 +74,10 @@ export default function Stock({ products, setProducts, settings }) {
               { key: 'name', label: 'Producto' },
               { key: 'description', label: 'Descripción' },
               { key: 'category', label: 'Categoría' },
-              { key: 'price', label: 'Precio' },
+              { label: 'Uds/Caja', transform: p => p.unitsPerBox || 1 },
+              { label: 'P. Minorista', transform: p => p.retailPrice || p.price },
+              { label: 'P. Mayorista', transform: p => p.wholesalePrice || '-' },
+              { label: 'Costo Prod.', transform: p => p.productionCost || '-' },
               { key: 'stock', label: 'Stock' },
               { key: 'minStock', label: 'Stock Mínimo' },
             ], 'stock-productos.csv')}>📄 Exportar CSV</button>
@@ -103,8 +123,20 @@ export default function Stock({ products, setProducts, settings }) {
               <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
             </div>
             <div className="form-group">
-              <label>Precio ($)</label>
-              <input type="number" min="0" required value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+              <label>Alfajores por caja/unidad</label>
+              <input type="number" min="1" required value={form.unitsPerBox} onChange={e => setForm({ ...form, unitsPerBox: e.target.value })} placeholder="1 = individual" />
+            </div>
+            <div className="form-group">
+              <label>Precio Minorista ($)</label>
+              <input type="number" min="0" required value={form.retailPrice} onChange={e => setForm({ ...form, retailPrice: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label>Precio Mayorista ($)</label>
+              <input type="number" min="0" value={form.wholesalePrice} onChange={e => setForm({ ...form, wholesalePrice: e.target.value })} placeholder="Opcional" />
+            </div>
+            <div className="form-group">
+              <label>Costo de Producción ($)</label>
+              <input type="number" min="0" value={form.productionCost} onChange={e => setForm({ ...form, productionCost: e.target.value })} placeholder="Opcional" />
             </div>
             <div className="form-group">
               <label>Stock actual</label>
@@ -130,40 +162,51 @@ export default function Stock({ products, setProducts, settings }) {
       </div>
 
       <div className="table-wrap">
-        <table className="data-table">
+        <table className="data-table compact">
           <thead>
             <tr>
               <th>Producto</th>
               <th>Categoría</th>
-              <th>Precio</th>
+              <th>Minorista</th>
+              <th>Mayorista</th>
+              <th>Costo</th>
+              <th>Margen</th>
               <th>Stock</th>
-              <th>Mín.</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map(p => (
+            {filtered.map(p => {
+              const retail = p.retailPrice || p.price || 0
+              const wholesale = p.wholesalePrice || 0
+              const cost = p.productionCost || 0
+              const margin = cost > 0 ? Math.round(((retail - cost) / retail) * 100) : null
+              return (
               <tr key={p.id} className={p.stock <= p.minStock ? 'row-alert' : ''}>
-                <td className="td-main">{p.name}<br /><small>{p.description}</small></td>
+                <td className="td-main">{p.name}<br /><small>{p.description}{(p.unitsPerBox || 1) > 1 ? ` · ${p.unitsPerBox} uds` : ''}</small></td>
                 <td><span className="badge">{p.category}</span></td>
-                <td>${p.price.toLocaleString()}</td>
+                <td className="td-number">${retail.toLocaleString()}</td>
+                <td className="td-number">{wholesale > 0 ? `$${wholesale.toLocaleString()}` : '—'}</td>
+                <td className="td-number">{cost > 0 ? `$${cost.toLocaleString()}` : '—'}</td>
+                <td>{margin !== null ? <span className={`badge ${margin >= 40 ? 'badge-green' : margin >= 20 ? 'badge-amber' : 'badge-red'}`}>{margin}%</span> : '—'}</td>
                 <td>
                   <div className="stock-controls">
-                    <button className="btn-mini" onClick={() => adjustStock(p.id, -10)}>-10</button>
-                    <span className="stock-value">{p.stock}</span>
-                    <button className="btn-mini" onClick={() => adjustStock(p.id, 10)}>+10</button>
+                    <button className="btn-mini" onClick={() => adjustStock(p.id, -10)}>-</button>
+                    <span className={`stock-value ${p.stock <= p.minStock ? 'stock-low' : ''}`}>{p.stock}</span>
+                    <button className="btn-mini" onClick={() => adjustStock(p.id, 10)}>+</button>
                   </div>
+                  <small className="stock-min-hint">mín. {p.minStock}</small>
                 </td>
-                <td>{p.minStock}</td>
                 <td>{p.stock <= p.minStock ? <span className="badge badge-red">⚠ Bajo</span> : <span className="badge badge-green">OK</span>}</td>
                 <td className="td-actions">
                   <button className="btn-sm" onClick={() => openEdit(p)}>Editar</button>
                   <button className="btn-sm btn-sm-red" onClick={() => handleDelete(p.id)}>✕</button>
                 </td>
               </tr>
-            ))}
-            {filtered.length === 0 && <tr><td colSpan={7} className="empty">Sin productos</td></tr>}
+              )
+            })}
+            {filtered.length === 0 && <tr><td colSpan={9} className="empty">Sin productos</td></tr>}
           </tbody>
         </table>
       </div>

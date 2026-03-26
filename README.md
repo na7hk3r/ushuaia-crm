@@ -11,14 +11,17 @@
 
 ## ✨ Características
 
-- **Dashboard** — Vista general con KPIs, gráficos de stock, facturación por cliente y alertas.
-- **Gestión de Clientes** — Alta, edición, historial de pedidos y ficha detallada por cliente.
+- **Dashboard** — Vista general con KPIs clickeables, calendario de entregas, gráfico dual de ingresos y ganancia, ranking de top clientes y resumen de producción. Navegación rápida a cada sección al hacer clic.
+- **Alertas** — Centro unificado de alertas: pedidos vencidos, entregas del día, stock bajo, producción activa. Secciones colapsables.
+- **Calendario de entregas** — Mini calendario interactivo que marca las fechas de entrega pendientes.
+- **Gestión de Clientes** — Alta, edición, formulario inline de pedidos con producto/cantidad/fecha de entrega. Tipo de precio (minorista/mayorista) y resumen de ganancia.
+- **Mapa** — Botón para abrir la ubicación y ruta de entregas en Google Maps.
 - **Producción** — Órdenes de producción con estados (planificado, en progreso, completado).
-- **Stock de Productos** — Inventario con alertas automáticas de stock bajo.
+- **Stock de Productos** — Inventario con precios (minorista, mayorista, costo), cálculo de margen y alertas de stock bajo.
 - **Materia Prima** — Control de insumos con stock mínimo y datos de proveedores.
 - **Exportar CSV** — Descarga los datos de cada sección en formato Excel/CSV.
 - **Respaldo y Restauración** — Exportar e importar todos los datos en un solo archivo.
-- **Configuración personalizable** — Nombre de empresa, logo, categorías, unidades de medida.
+- **Configuración personalizable** — Nombre de empresa, logo, moneda, tipo de precio, tasa de impuesto, categorías, unidades de medida, opciones de entrega.
 - **Datos de ejemplo eliminables** — El programa incluye datos de demostración que se pueden eliminar con un solo clic desde el Dashboard.
 - **100% offline** — No requiere conexión a internet. Los datos se guardan localmente.
 
@@ -34,7 +37,7 @@
 
 ## 🚀 Instalación (usuario final)
 
-1. Descargá el archivo **Ushuaia CRM Setup 1.0.0.exe** desde [Releases](#).
+1. Descargá el archivo **Ushuaia CRM Setup 1.1.0.exe** desde [Releases](#).
 2. Ejecutá el instalador y seguí los pasos del asistente.
 3. Abrí **Ushuaia CRM** desde el acceso directo en el escritorio.
 
@@ -83,6 +86,7 @@ El instalador y el portable se generan en la carpeta `release/`.
 │   └── preload.js      # Bridge seguro (contextBridge)
 ├── src/
 │   ├── components/     # Componentes React
+│   │   ├── Alerts.jsx
 │   │   ├── Clients.jsx
 │   │   ├── Dashboard.jsx
 │   │   ├── Materials.jsx
@@ -119,4 +123,4 @@ El instalador y el portable se generan en la carpeta `release/`.
 
 ## 📄 Licencia
 
-Proyecto privado — Ushuaia Alfajores © 2026
+Proyecto privado — Ushuaia Alfajores © 2026 — v1.1.0
