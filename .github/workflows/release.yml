@@ -17,10 +17,80 @@ concurrency:
 jobs:
   release:
     runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release_notes: ${{ steps.notes.outputs.notes }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: version
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release notes from commits
+        id: notes
+        shell: bash
+        run: |
+          # Find previous tag
+          PREV_TAG=$(git tag --sort=-v:refname | head -2 | tail -1)
+          if [ "$PREV_TAG" = "$GITHUB_REF_NAME" ]; then
+            PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+          fi
+
+          NOTES=""
+          FEATURES=""
+          FIXES=""
+          OTHER=""
+
+          while IFS= read -r line; do
+            MSG=$(echo "$line" | sed 's/^[a-f0-9]* //')
+            case "$MSG" in
+              feat:*|feat\(*) FEATURES="${FEATURES}- ${MSG#feat: }
+          ";;
+              fix:*|fix\(*) FIXES="${FIXES}- ${MSG#fix: }
+          ";;
+              *) 
+                # Skip version bump commits and merge commits
+                if [[ ! "$MSG" =~ ^[0-9]+\.[0-9]+ ]] && [[ ! "$MSG" =~ ^Merge ]]; then
+                  OTHER="${OTHER}- ${MSG}
+          "
+                fi
+              ;;
+            esac
+          done <<< "$(git log --oneline ${PREV_TAG}..${GITHUB_REF_NAME})"
+
+          if [ -n "$FEATURES" ]; then
+            NOTES="${NOTES}### ✨ Nuevas funcionalidades
+          ${FEATURES}
+          "
+          fi
+          if [ -n "$FIXES" ]; then
+            NOTES="${NOTES}### 🐛 Correcciones
+          ${FIXES}
+          "
+          fi
+          if [ -n "$OTHER" ]; then
+            NOTES="${NOTES}### 📦 Otros cambios
+          ${OTHER}
+          "
+          fi
+
+          if [ -z "$NOTES" ]; then
+            NOTES="Actualización de mantenimiento."
+          fi
+
+          # Write to file for multi-line output
+          echo "$NOTES" > release_notes.md
+          {
+            echo "notes<<NOTES_EOF"
+            cat release_notes.md
+            echo "NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -35,6 +105,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist -- --publish always
+
+      - name: Update GitHub Release body
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "$GITHUB_REF_NAME" \
+            --notes "$(cat release_notes.md)" \
+            --repo na7hk3r/ushuaia-crm
 
   deploy-landing:
     needs: release
@@ -55,7 +134,13 @@ jobs:
           echo "" >> landing/CHANGELOG.md
           echo "Generado automáticamente desde [GitHub Releases](https://github.com/na7hk3r/ushuaia-crm/releases)." >> landing/CHANGELOG.md
           echo "" >> landing/CHANGELOG.md
-          gh api repos/na7hk3r/ushuaia-crm/releases --paginate --jq '.[] | "## " + .tag_name + " — " + (.published_at | split("T")[0]) + "\n\n" + (if .body != "" then .body else "Sin notas de versión." end) + "\n"' >> landing/CHANGELOG.md
+
+          # Wait briefly for the release to be fully published
+          sleep 10
+
+          gh api repos/na7hk3r/ushuaia-crm/releases --paginate --jq \
+            '.[] | "## " + .tag_name + " — " + (.published_at | split("T")[0]) + "\n\n" + (if .body != "" and .body != null then .body else "Sin notas de versión." end) + "\n"' \
+            >> landing/CHANGELOG.md
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

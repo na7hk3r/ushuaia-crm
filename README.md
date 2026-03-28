@@ -93,24 +93,22 @@ El instalador y el portable se generan en la carpeta `release/`.
 │       └── fileHandlers.js
 ├── src/
 │   ├── components/     # Componentes React
-│   │   ├── Alerts.jsx
-│   │   ├── Clients.jsx
-│   │   ├── Dashboard.jsx
-│   │   ├── Materials.jsx
-│   │   ├── Production.jsx
-│   │   ├── Settings.jsx
-│   │   ├── Sidebar.jsx
-│   │   ├── Stock.jsx
-│   │   ├── UpdateBanner.jsx
-│   │   └── UsageGuide.jsx
 │   ├── data/           # Datos iniciales y constantes
 │   ├── hooks/          # Custom hooks (useLocalStorage)
 │   ├── utils/          # Utilidades (exportCSV, respaldo)
 │   ├── App.jsx         # Componente raíz
 │   ├── App.css         # Estilos principales
 │   └── index.css       # Variables CSS (paleta patagónica)
-├── .github/workflows/  # CI/CD con GitHub Actions
-│   └── release.yml     # Build + publish automático con tags
+├── landing/            # Landing page (GitHub Pages)
+│   ├── index.html      # Página principal con descarga y release notes
+│   ├── style.css       # Estilos de la landing
+│   ├── script.js       # Fetch dinámico de releases desde GitHub API
+│   └── 404.html        # Página de error
+├── scripts/
+│   ├── release.js      # Script de versionado automático (npm run release)
+│   └── generate-assets.js
+├── .github/workflows/
+│   └── release.yml     # CI/CD: build + release + deploy landing
 ├── index.html          # Entry point
 ├── vite.config.js      # Configuración Vite + Electron
 ├── package.json        # Dependencias y scripts
@@ -136,14 +134,57 @@ El instalador y el portable se generan en la carpeta `release/`.
 
 ## � Releases y actualizaciones
 
-El proyecto usa **GitHub Actions** para generar releases automáticos. Para publicar una nueva versión:
+El proyecto usa **Semantic Versioning** (`MAJOR.MINOR.PATCH`) y **Conventional Commits** para automatizar el versionado, las notas de release y el deploy.
+
+### Convención de commits
+
+Usá estos prefijos en los mensajes de commit para que el sistema detecte automáticamente el tipo de release:
+
+| Prefijo | Tipo | Ejemplo |
+|---------|------|---------|
+| `feat:` | **Minor** (funcionalidad nueva) | `feat: agregar filtro de búsqueda en clientes` |
+| `fix:` | **Patch** (corrección) | `fix: corregir cálculo de stock negativo` |
+| `feat!:` o `BREAKING:` | **Major** (cambio incompatible) | `feat!: nuevo formato de datos de producción` |
+| Cualquier otro | **Patch** | `docs: actualizar guía de uso` |
+
+Otros prefijos comunes (todos son patch): `docs:`, `style:`, `refactor:`, `perf:`, `chore:`, `test:`.
+
+### Publicar una nueva versión
 
 ```bash
-npm version patch   # o minor / major
-git push origin main --follow-tags
+npm run release
 ```
 
-Esto dispara el workflow que compila el instalador NSIS + portable y los publica como GitHub Release. Los usuarios existentes reciben una notificación de actualización dentro de la app.
+Este comando hace **todo automáticamente**:
+
+1. Verifica que no haya cambios sin commitear
+2. Analiza los commits desde el último tag
+3. Detecta si es `patch`, `minor` o `major` según los prefijos
+4. Muestra un resumen y ejecuta `npm version`
+5. Pushea el commit y tag al remoto
+
+Para forzar un tipo específico:
+
+```bash
+npm run release -- patch    # forzar patch
+npm run release -- minor    # forzar minor
+npm run release -- major    # forzar major
+```
+
+### ¿Qué pasa en GitHub Actions?
+
+Al pushear un tag `v*`, el workflow hace automáticamente:
+
+1. **Job `release`** (Windows) — Compila el `.exe` (NSIS + portable), lo publica como GitHub Release con notas auto-generadas desde los commits
+2. **Job `deploy-landing`** (Ubuntu) — Genera `CHANGELOG.md` y despliega la [landing page](https://na7hk3r.github.io/ushuaia-crm/) a GitHub Pages
+3. Los usuarios existentes reciben notificación de actualización dentro de la app
+
+### Configuración inicial del repo (una sola vez)
+
+Para que el flujo funcione correctamente, verificá estos ajustes en GitHub:
+
+1. **Settings → Pages → Source** → seleccionar **"GitHub Actions"**
+2. **Settings → Environments → github-pages → Deployment branches and tags** → seleccionar **"All branches and tags"** (necesario porque el workflow se dispara desde tags, no branches)
 
 ---
 

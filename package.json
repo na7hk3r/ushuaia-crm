@@ -19,7 +19,8 @@
     "electron:dev": "vite",
     "electron:build": "vite build && electron-builder",
     "electron:preview": "vite build && electron .",
-    "dist": "vite build && electron-builder"
+    "dist": "vite build && electron-builder",
+    "release": "node scripts/release.js"
   },
   "dependencies": {
     "electron-updater": "^6.8.3",
