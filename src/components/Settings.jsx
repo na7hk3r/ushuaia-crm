@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { backupData, restoreData } from '../utils/exportCSV'
+import UsageGuide from './UsageGuide'
 
 export default function Settings({ settings, setSettings, allData, onRestore, products }) {
   const [newClientCat, setNewClientCat] = useState('')
@@ -7,6 +8,7 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
   const [newProdStatus, setNewProdStatus] = useState('')
   const [newUnit, setNewUnit] = useState('')
   const [message, setMessage] = useState(null)
+  const [showGuide, setShowGuide] = useState(false)
   const logoInputRef = useRef(null)
 
   function updateField(field, value) {
@@ -252,6 +254,17 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
           </div>
         </div>
 
+        {/* ── Guía de Uso ── */}
+        <div className="settings-section">
+          <h3>📖 Guía de Uso</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px', lineHeight: '1.6' }}>
+            Consultá la guía completa del programa con instrucciones detalladas de cada sección.
+          </p>
+          <button className="btn-primary" onClick={() => setShowGuide(true)}>
+            📖 Abrir Guía de Uso
+          </button>
+        </div>
+
         {/* ── Respaldo y Restauración ── */}
         <div className="settings-section">
           <h3>💾 Respaldo y Restauración</h3>
@@ -357,6 +370,7 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
           </div>
         </div>
       </div>
+      {showGuide && <UsageGuide onClose={() => setShowGuide(false)} />}
     </div>
   )
 }

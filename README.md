@@ -22,6 +22,8 @@
 - **Exportar CSV** — Descarga los datos de cada sección en formato Excel/CSV.
 - **Respaldo y Restauración** — Exportar e importar todos los datos en un solo archivo.
 - **Configuración personalizable** — Nombre de empresa, logo, moneda, tipo de precio, tasa de impuesto, categorías, unidades de medida, opciones de entrega.
+- **Guía de uso integrada** — Documentación completa accesible desde Configuración, con búsqueda y renderizado de Markdown.
+- **Actualizaciones automáticas** — El programa detecta nuevas versiones y permite descargarlas e instalarlas desde la propia app.
 - **Datos de ejemplo eliminables** — El programa incluye datos de demostración que se pueden eliminar con un solo clic desde el Dashboard.
 - **100% offline** — No requiere conexión a internet. Los datos se guardan localmente.
 
@@ -37,9 +39,10 @@
 
 ## 🚀 Instalación (usuario final)
 
-1. Descargá el archivo **Ushuaia CRM Setup 1.1.0.exe** desde [Releases](#).
+1. Descargá el archivo **UshuaiaCRM-Setup-x.x.x.exe** desde [Releases](https://github.com/na7hk3r/ushuaia-crm/releases).
 2. Ejecutá el instalador y seguí los pasos del asistente.
 3. Abrí **Ushuaia CRM** desde el acceso directo en el escritorio.
+4. Las actualizaciones futuras se descargan automáticamente desde la app.
 
 > Consultá la [Guía de Uso](GUIA-DE-USO.md) para instrucciones detalladas.
 
@@ -82,8 +85,12 @@ El instalador y el portable se generan en la carpeta `release/`.
 
 ```
 ├── electron/           # Proceso principal de Electron
-│   ├── main.js         # Ventana principal, IPC handlers
-│   └── preload.js      # Bridge seguro (contextBridge)
+│   ├── main.js         # Ventana principal
+│   ├── preload.js      # Bridge seguro (contextBridge)
+│   ├── updater.js      # Auto-updater (electron-updater)
+│   └── ipc/            # Handlers IPC separados
+│       ├── appHandlers.js
+│       └── fileHandlers.js
 ├── src/
 │   ├── components/     # Componentes React
 │   │   ├── Alerts.jsx
@@ -93,13 +100,17 @@ El instalador y el portable se generan en la carpeta `release/`.
 │   │   ├── Production.jsx
 │   │   ├── Settings.jsx
 │   │   ├── Sidebar.jsx
-│   │   └── Stock.jsx
+│   │   ├── Stock.jsx
+│   │   ├── UpdateBanner.jsx
+│   │   └── UsageGuide.jsx
 │   ├── data/           # Datos iniciales y constantes
 │   ├── hooks/          # Custom hooks (useLocalStorage)
 │   ├── utils/          # Utilidades (exportCSV, respaldo)
 │   ├── App.jsx         # Componente raíz
 │   ├── App.css         # Estilos principales
 │   └── index.css       # Variables CSS (paleta patagónica)
+├── .github/workflows/  # CI/CD con GitHub Actions
+│   └── release.yml     # Build + publish automático con tags
 ├── index.html          # Entry point
 ├── vite.config.js      # Configuración Vite + Electron
 ├── package.json        # Dependencias y scripts
@@ -117,10 +128,25 @@ El instalador y el portable se generan en la carpeta `release/`.
 | **Electron 41** | Aplicación de escritorio |
 | **Recharts** | Gráficos del Dashboard |
 | **electron-builder** | Empaquetado .exe |
+| **electron-updater** | Actualizaciones automáticas (OTA) |
+| **GitHub Actions** | CI/CD: build + release automático |
 | **localStorage** | Persistencia de datos |
+
+---
+
+## � Releases y actualizaciones
+
+El proyecto usa **GitHub Actions** para generar releases automáticos. Para publicar una nueva versión:
+
+```bash
+npm version patch   # o minor / major
+git push origin main --follow-tags
+```
+
+Esto dispara el workflow que compila el instalador NSIS + portable y los publica como GitHub Release. Los usuarios existentes reciben una notificación de actualización dentro de la app.
 
 ---
 
 ## 📄 Licencia
 
-Proyecto privado — Ushuaia Alfajores © 2026 — v1.1.0
+Proyecto privado — Ushuaia Alfajores © 2026

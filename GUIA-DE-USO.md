@@ -6,7 +6,7 @@ Bienvenido/a a **Ushuaia CRM**, el programa de gestión para tu negocio de alfaj
 
 ## 📂 ¿Cómo instalar el programa?
 
-1. Hacé doble clic en el archivo **Ushuaia CRM Setup 1.0.0.exe**.
+1. Hacé doble clic en el archivo **UshuaiaCRM-Setup-x.x.x.exe**.
 2. Windows puede mostrar un aviso de seguridad. Hacé clic en **"Más información"** y luego en **"Ejecutar de todas formas"**. Es normal porque el programa no tiene firma digital.
 3. Se abrirá el asistente de instalación. Seguí los pasos:
    - Elegí la carpeta donde querés instalar el programa (o dejá la que viene por defecto).
@@ -192,12 +192,28 @@ Podés agregar o quitar:
 Para agregar una categoría, escribila y hacé clic en **"Agregar"** (o presioná Enter).
 Para eliminar, hacé clic en la **×** al lado del nombre.
 
+### Guía de Uso integrada
+Desde la sección de **Configuración**, podés abrir la **📖 Guía de Uso** completa. Se muestra en una ventana dentro del programa con búsqueda incluida.
+
 ### Respaldo y Restauración
 
 - **📥 Guardar Respaldo**: Exporta TODOS los datos del programa (clientes, productos, insumos, producción y configuración) en un solo archivo. Guardalo en un lugar seguro.
 - **📤 Restaurar Respaldo**: Si necesitás recuperar tus datos (por ejemplo, en otra computadora o después de reinstalar), hacé clic acá y seleccioná el archivo de respaldo que guardaste.
 
 > **Consejo**: Guardá un respaldo periódicamente (por ejemplo, una vez por semana) para no perder información importante.
+
+---
+
+## 🔄 Actualizaciones automáticas
+
+Ushuaia CRM se actualiza automáticamente. Cuando hay una nueva versión disponible:
+
+1. Aparece un **banner azul** en la parte superior que dice "Nueva versión X.X.X disponible".
+2. Hacé clic en **"Descargar"** para iniciar la descarga. Vas a ver una barra de progreso.
+3. Cuando termine, aparece el botón **"Reiniciar ahora"** para instalar la actualización.
+4. Si preferís hacerlo después, hacé clic en **"Después"**. La actualización se instalará la próxima vez que cierres el programa.
+
+> **Nota**: Las actualizaciones se descargan desde GitHub. Necesitás conexión a internet solo para este paso; el resto del programa sigue funcionando offline.
 
 ---
 
@@ -226,8 +242,8 @@ Sí. Guardá un respaldo desde Configuración, copiá la carpeta del programa a 
 Sí, al cerrar y volver a abrir el programa tus datos seguirán ahí.
 
 **¿Necesito internet para usar el programa?**
-No. El programa funciona completamente sin conexión a internet.
+No. El programa funciona completamente sin conexión a internet. Solo se necesita conexión para descargar actualizaciones.
 
 ---
 
-*Ushuaia CRM v1.1.0 — Hecho para la gestión de alfajores artesanales 🏔️*
+*Ushuaia CRM — Hecho para la gestión de alfajores artesanales 🏔️*
