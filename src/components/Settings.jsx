@@ -265,6 +265,17 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
           </button>
         </div>
 
+        {/* ── Notas de Versión ── */}
+        <div className="settings-section">
+          <h3>📋 Notas de Versión</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px', lineHeight: '1.6' }}>
+            Consultá el historial de cambios y las novedades de cada actualización.
+          </p>
+          <button className="btn-primary" onClick={() => window.electronAPI?.openExternal('https://na7hk3r.github.io/ushuaia-crm/#releases')}>
+            🌐 Ver Notas de Versión
+          </button>
+        </div>
+
         {/* ── Respaldo y Restauración ── */}
         <div className="settings-section">
           <h3>💾 Respaldo y Restauración</h3>

@@ -52,12 +52,20 @@ export default function UpdateBanner() {
         </div>
         <div style={styles.actions}>
           {status === 'available' && (
-            <button
-              style={styles.btn}
-              onClick={() => window.electronAPI.startUpdateDownload()}
-            >
-              Descargar
-            </button>
+            <>
+              <button
+                style={styles.btn}
+                onClick={() => window.electronAPI.startUpdateDownload()}
+              >
+                Descargar
+              </button>
+              <button
+                style={styles.btnSecondary}
+                onClick={() => window.electronAPI.openExternal('https://na7hk3r.github.io/ushuaia-crm/#releases')}
+              >
+                Ver cambios
+              </button>
+            </>
           )}
           {status === 'ready' && (
             <>
