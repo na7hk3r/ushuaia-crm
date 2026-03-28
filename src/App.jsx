@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+﻿import { useState, useEffect } from 'react'
 import './App.css'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { initialClients, initialProducts, initialRawMaterials, initialProduction, defaultSettings, demoClientIds, demoProductIds, demoMaterialIds, demoProductionIds } from './data/initialData'
@@ -38,6 +38,17 @@ function App() {
     products.some(p => demoProductIds.has(p.id)) ||
     rawMaterials.some(m => demoMaterialIds.has(m.id)) ||
     production.some(p => demoProductionIds.has(p.id)))
+
+  // Auto-mark demo as cleared when all demo items have been removed manually
+  useEffect(() => {
+    if (demoCleared) return
+    const hasAnyDemoItem =
+      clients.some(c => demoClientIds.has(c.id)) ||
+      products.some(p => demoProductIds.has(p.id)) ||
+      rawMaterials.some(m => demoMaterialIds.has(m.id)) ||
+      production.some(p => demoProductionIds.has(p.id))
+    if (!hasAnyDemoItem) setDemoCleared(true)
+  }, [clients, products, rawMaterials, production, demoCleared, setDemoCleared])
 
   function handleClearDemoData() {
     setClients(prev => prev.filter(c => !demoClientIds.has(c.id)))

@@ -16,12 +16,12 @@ export function registerAppHandlers() {
     autoUpdater.quitAndInstall()
   })
 
-  ipcMain.handle('open-external', (_event, url) => {
+  ipcMain.handle('open-external', async (_event, url) => {
     try {
       const parsed = new URL(url)
       if (parsed.protocol !== 'https:') return
       if (!ALLOWED_ORIGINS.some(o => url.startsWith(o))) return
-      shell.openExternal(url)
+      await shell.openExternal(url)
     } catch { /* invalid URL — ignore */ }
   })
 }

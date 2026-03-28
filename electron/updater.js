@@ -55,7 +55,9 @@ export function initAutoUpdater(mainWindow, { autoCheck = true } = {}) {
   })
 
   if (autoCheck) {
-    autoUpdater.checkForUpdates().catch(() => {})
+    mainWindow.webContents.once('did-finish-load', () => {
+      setTimeout(() => autoUpdater.checkForUpdates().catch(() => {}), 3000)
+    })
     setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 30 * 60 * 1000)
   }
 }
