@@ -6,6 +6,7 @@ const { autoUpdater } = updater
 const ALLOWED_ORIGINS = [
   'https://na7hk3r.github.io',
   'https://github.com',
+  'https://smcurbelo.vercel.app',
 ]
 
 export function registerAppHandlers() {

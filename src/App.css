@@ -124,6 +124,23 @@
   font-size: 10px;
 }
 
+.sidebar-footer .dev-credit {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.5;
+  margin-top: 2px;
+}
+
+.sidebar-footer .dev-credit a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.sidebar-footer .dev-credit a:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+
 /* ===== MAIN CONTENT ===== */
 .main-content {
   margin-left: 260px;
@@ -986,6 +1003,25 @@
   min-width: 180px;
   text-align: center;
   justify-content: center;
+}
+
+/* ===== SETTINGS CREDIT ===== */
+.settings-credit {
+  text-align: center;
+  padding: 24px 0 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.settings-credit a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.settings-credit a:hover {
+  color: var(--primary);
+  opacity: 1;
 }
 
 /* ===== SETTINGS PRICE OVERVIEW ===== */

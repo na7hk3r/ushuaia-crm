@@ -426,6 +426,24 @@ a:hover {
   color: var(--text);
 }
 
+.footer-credit {
+  text-align: center;
+  padding: 12px 0 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.footer-credit a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.footer-credit a:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+
 /* ─── Animations ─── */
 @keyframes fadeInUp {
   from {

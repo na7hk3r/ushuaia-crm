@@ -265,26 +265,23 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
           </button>
         </div>
 
-        {/* ── Notas de Versión ── */}
+        {/* ── Versión y Actualizaciones ── */}
         <div className="settings-section">
-          <h3>📋 Notas de Versión</h3>
+          <h3>🔄 Versión y Actualizaciones</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px', lineHeight: '1.6' }}>
-            Consultá el historial de cambios y las novedades de cada actualización.
+            La app busca actualizaciones automáticamente cada 30 minutos. También podés verificar manualmente o consultar el historial de cambios.
           </p>
-          <button className="btn-primary" onClick={() => window.electronAPI?.openExternal('https://na7hk3r.github.io/ushuaia-crm/#releases')}>
-            🌐 Ver Notas de Versión
-          </button>
-        </div>
-
-        {/* ── Actualizaciones ── */}
-        <div className="settings-section">
-          <h3>🔄 Actualizaciones</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px', lineHeight: '1.6' }}>
-            La app busca actualizaciones automáticamente cada 30 minutos. También podés verificar manualmente.
-          </p>
-          <button className="btn-primary" onClick={() => window.electronAPI?.checkForUpdates()}>
-            🔍 Buscar actualizaciones
-          </button>
+          <div className="backup-actions">
+            <button className="btn-primary" onClick={() => window.electronAPI?.checkForUpdates()}>
+              🔍 Buscar actualizaciones
+            </button>
+            <button className="btn-ghost" onClick={() => window.electronAPI?.openExternal('https://na7hk3r.github.io/ushuaia-crm/#releases')}>
+              📋 Ver Notas de Versión
+            </button>
+            <button className="btn-ghost" onClick={() => window.electronAPI?.openExternal('https://na7hk3r.github.io/ushuaia-crm/')}>
+              🌐 Ir al sitio web
+            </button>
+          </div>
         </div>
 
         {/* ── Respaldo y Restauración ── */}
@@ -393,6 +390,12 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
         </div>
       </div>
       {showGuide && <UsageGuide onClose={() => setShowGuide(false)} />}
+
+      <div className="settings-credit">
+        Desarrollado por <a href="https://smcurbelo.vercel.app" target="_blank" rel="noopener noreferrer" onClick={e => { e.preventDefault(); window.electronAPI?.openExternal('https://smcurbelo.vercel.app') }}>smcurbelo</a>
+        {' · '}
+        <a href="https://github.com/na7hk3r" target="_blank" rel="noopener noreferrer" onClick={e => { e.preventDefault(); window.electronAPI?.openExternal('https://github.com/na7hk3r') }}>GitHub</a>
+      </div>
     </div>
   )
 }
