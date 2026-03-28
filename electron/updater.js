@@ -32,5 +32,12 @@ export function initAutoUpdater(mainWindow) {
     autoUpdater.downloadUpdate()
   })
 
+  ipcMain.handle('check-for-updates', () => {
+    autoUpdater.checkForUpdates()
+  })
+
   autoUpdater.checkForUpdates()
+
+  // Re-check every 30 minutes
+  setInterval(() => autoUpdater.checkForUpdates(), 30 * 60 * 1000)
 }

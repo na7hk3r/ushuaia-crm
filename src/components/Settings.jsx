@@ -276,6 +276,17 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
           </button>
         </div>
 
+        {/* ── Actualizaciones ── */}
+        <div className="settings-section">
+          <h3>🔄 Actualizaciones</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px', lineHeight: '1.6' }}>
+            La app busca actualizaciones automáticamente cada 30 minutos. También podés verificar manualmente.
+          </p>
+          <button className="btn-primary" onClick={() => window.electronAPI?.checkForUpdates()}>
+            🔍 Buscar actualizaciones
+          </button>
+        </div>
+
         {/* ── Respaldo y Restauración ── */}
         <div className="settings-section">
           <h3>💾 Respaldo y Restauración</h3>
