@@ -47,6 +47,10 @@ export default function UpdateBanner() {
       setTimeout(() => setStatus(null), 4000)
     })
 
+    api.onUpdateChecking?.(() => {
+      setStatus('checking')
+    })
+
     api.onUpdateProgress((progress) => {
       setPercent(progress.percent)
       setStatus('downloading')
@@ -74,11 +78,13 @@ export default function UpdateBanner() {
     <div style={styles.wrapper}>
       <div style={{
         ...styles.banner,
+        ...(status === 'checking' ? { background: '#F8FAFC', border: '1px solid #E2E8F0', borderLeft: '4px solid #94A3B8' } : {}),
         ...(status === 'up-to-date' ? { background: '#F0FDF4', border: '1px solid #BBF7D0', borderLeft: '4px solid #16A34A' } : {}),
         ...(status === 'error' ? { background: '#FEF2F2', border: '1px solid #FECACA', borderLeft: '4px solid #DC2626' } : {}),
       }}>
         <div style={styles.content}>
           <span style={styles.icon}>
+            {status === 'checking' && '🔍'}
             {status === 'available' && '✨'}
             {status === 'downloading' && '🔄'}
             {status === 'ready' && '✅'}
@@ -87,6 +93,7 @@ export default function UpdateBanner() {
           </span>
           <div>
             <strong style={styles.title}>
+              {status === 'checking' && 'Buscando actualizaciones…'}
               {status === 'available' && (
                 <>
                   Nueva versión {version} disponible

@@ -48,6 +48,8 @@ app.whenReady().then(() => {
 
   if (!process.env.VITE_DEV_SERVER_URL) {
     initAutoUpdater(mainWindow)
+  } else {
+    initAutoUpdater(mainWindow, { autoCheck: false })
   }
 
   app.on('activate', () => {

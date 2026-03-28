@@ -3,7 +3,7 @@ import { ipcMain } from 'electron'
 
 const { autoUpdater } = updater
 
-export function initAutoUpdater(mainWindow) {
+export function initAutoUpdater(mainWindow, { autoCheck = true } = {}) {
   autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = true
 
@@ -41,12 +41,21 @@ export function initAutoUpdater(mainWindow) {
     autoUpdater.downloadUpdate()
   })
 
-  ipcMain.handle('check-for-updates', () => {
-    autoUpdater.checkForUpdates()
+  ipcMain.handle('check-for-updates', async () => {
+    mainWindow.webContents.send('update-checking')
+    try {
+      await autoUpdater.checkForUpdates()
+    } catch (err) {
+      mainWindow.webContents.send('update-error', {
+        message: autoCheck
+          ? err.message
+          : 'Las actualizaciones solo están disponibles en la versión instalada',
+      })
+    }
   })
 
-  autoUpdater.checkForUpdates()
-
-  // Re-check every 30 minutes
-  setInterval(() => autoUpdater.checkForUpdates(), 30 * 60 * 1000)
+  if (autoCheck) {
+    autoUpdater.checkForUpdates().catch(() => {})
+    setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 30 * 60 * 1000)
+  }
 }

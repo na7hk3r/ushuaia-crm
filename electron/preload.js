@@ -23,6 +23,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateNotAvailable: (cb) =>
     ipcRenderer.on('update-not-available', (_e, info) => cb(info)),
 
+  onUpdateChecking: (cb) =>
+    ipcRenderer.on('update-checking', () => cb()),
+
   onUpdateProgress: (cb) =>
     ipcRenderer.on('update-progress', (_e, progress) => cb(progress)),
 
@@ -44,6 +47,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeUpdateListeners: () => {
     ipcRenderer.removeAllListeners('update-available')
     ipcRenderer.removeAllListeners('update-not-available')
+    ipcRenderer.removeAllListeners('update-checking')
     ipcRenderer.removeAllListeners('update-progress')
     ipcRenderer.removeAllListeners('update-downloaded')
     ipcRenderer.removeAllListeners('update-error')
