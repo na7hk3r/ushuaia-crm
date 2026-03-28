@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { version as pkgVersion } from '../../package.json'
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -11,11 +12,11 @@ const menuItems = [
 ]
 
 export default function Sidebar({ active, onNavigate, companyName, companyLogo }) {
-  const [version, setVersion] = useState('')
+  const [version, setVersion] = useState(pkgVersion)
 
   useEffect(() => {
     if (window.electronAPI?.getAppVersion) {
-      window.electronAPI.getAppVersion().then(v => setVersion(v))
+      window.electronAPI.getAppVersion().then(v => setVersion(v)).catch(() => {})
     }
   }, [])
 
