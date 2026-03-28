@@ -1,7 +1,9 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
-import { writeFile, readFile } from 'node:fs/promises'
+import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { registerFileHandlers } from './ipc/fileHandlers.js'
+import { registerAppHandlers } from './ipc/appHandlers.js'
+import { initAutoUpdater } from './updater.js'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
@@ -25,9 +27,7 @@ function createWindow() {
     },
   })
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show()
-  })
+  mainWindow.once('ready-to-show', () => mainWindow.show())
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url)
@@ -43,6 +43,12 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow()
+  registerFileHandlers(mainWindow)
+  registerAppHandlers()
+
+  if (!process.env.VITE_DEV_SERVER_URL) {
+    initAutoUpdater(mainWindow)
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -52,44 +58,3 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
-
-// ─── IPC: Export CSV ─────────────────────────────────────────────
-ipcMain.handle('export-csv', async (_event, { defaultName, csvContent }) => {
-  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
-    title: 'Exportar CSV',
-    defaultPath: defaultName || 'export.csv',
-    filters: [{ name: 'CSV', extensions: ['csv'] }],
-  })
-  if (canceled || !filePath) return { success: false }
-  await writeFile(filePath, '\uFEFF' + csvContent, 'utf-8') // BOM for Excel
-  return { success: true, filePath }
-})
-
-// ─── IPC: Respaldo ─────────────────────────────────────────────────────
-ipcMain.handle('backup-data', async (_event, jsonData) => {
-  const timestamp = new Date().toISOString().slice(0, 10)
-  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
-    title: 'Guardar Respaldo',
-    defaultPath: `ushuaia-respaldo-${timestamp}.json`,
-    filters: [{ name: 'JSON', extensions: ['json'] }],
-  })
-  if (canceled || !filePath) return { success: false }
-  await writeFile(filePath, JSON.stringify(jsonData, null, 2), 'utf-8')
-  return { success: true, filePath }
-})
-
-// ─── IPC: Restore ────────────────────────────────────────────────
-ipcMain.handle('restore-data', async () => {
-  const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
-    title: 'Restaurar Respaldo',
-    filters: [{ name: 'JSON', extensions: ['json'] }],
-    properties: ['openFile'],
-  })
-  if (canceled || filePaths.length === 0) return { success: false }
-  const raw = await readFile(filePaths[0], 'utf-8')
-  const data = JSON.parse(raw)
-  return { success: true, data }
-})
-
-// ─── IPC: App info ───────────────────────────────────────────────
-ipcMain.handle('get-app-version', () => app.getVersion())

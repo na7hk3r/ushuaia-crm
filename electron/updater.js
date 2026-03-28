@@ -1,0 +1,36 @@
+import updater from 'electron-updater'
+import { ipcMain } from 'electron'
+
+const { autoUpdater } = updater
+
+export function initAutoUpdater(mainWindow) {
+  autoUpdater.autoDownload = false
+  autoUpdater.autoInstallOnAppQuit = true
+
+  autoUpdater.on('update-available', (info) => {
+    mainWindow.webContents.send('update-available', {
+      version: info.version,
+      releaseNotes: info.releaseNotes,
+    })
+  })
+
+  autoUpdater.on('download-progress', (progress) => {
+    mainWindow.webContents.send('update-progress', {
+      percent: Math.round(progress.percent),
+    })
+  })
+
+  autoUpdater.on('update-downloaded', () => {
+    mainWindow.webContents.send('update-downloaded')
+  })
+
+  autoUpdater.on('error', (err) => {
+    console.error('Auto-updater error:', err.message)
+  })
+
+  ipcMain.handle('start-update-download', () => {
+    autoUpdater.downloadUpdate()
+  })
+
+  autoUpdater.checkForUpdates()
+}

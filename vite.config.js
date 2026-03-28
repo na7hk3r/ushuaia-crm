@@ -14,7 +14,7 @@ export default defineConfig({
         entry: 'electron/main.js',
         vite: {
           build: {
-            rollupOptions: { external: ['electron'] },
+            rollupOptions: { external: ['electron', 'electron-updater'] },
             outDir: 'dist-electron',
           },
         },

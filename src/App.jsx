@@ -10,6 +10,7 @@ import Stock from './components/Stock'
 import Materials from './components/Materials'
 import Settings from './components/Settings'
 import Alerts from './components/Alerts'
+import UpdateBanner from './components/UpdateBanner'
 
 function App() {
   const [page, setPage] = useState('dashboard')
@@ -65,6 +66,7 @@ function App() {
 
   return (
     <div className="app-layout">
+      {window.electronAPI?.isElectron && <UpdateBanner />}
       <Sidebar active={page} onNavigate={setPage} companyName={settings.companyName} companyLogo={settings.companyLogo} />
       <main className="main-content">
         {renderPage()}
