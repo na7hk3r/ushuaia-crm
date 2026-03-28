@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react'
+
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
   { id: 'alerts', label: 'Alertas', icon: '🔔' },
@@ -9,6 +11,14 @@ const menuItems = [
 ]
 
 export default function Sidebar({ active, onNavigate, companyName, companyLogo }) {
+  const [version, setVersion] = useState('')
+
+  useEffect(() => {
+    if (window.electronAPI?.getAppVersion) {
+      window.electronAPI.getAppVersion().then(v => setVersion(v))
+    }
+  }, [])
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -36,7 +46,7 @@ export default function Sidebar({ active, onNavigate, companyName, companyLogo }
       </nav>
       <div className="sidebar-footer">
         <span>{companyName || 'Ushuaia Alfajores'} © {new Date().getFullYear()}</span>
-        <span className="version">v1.0.0</span>
+        <span className="version">{version ? `v${version}` : ''}</span>
       </div>
     </aside>
   )

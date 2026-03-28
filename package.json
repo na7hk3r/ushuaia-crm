@@ -56,7 +56,8 @@
       {
         "provider": "github",
         "owner": "na7hk3r",
-        "repo": "ushuaia-crm"
+        "repo": "ushuaia-crm",
+        "releaseType": "release"
       }
     ],
     "win": {
