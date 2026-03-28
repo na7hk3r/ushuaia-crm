@@ -6,6 +6,11 @@
   "main": "electron/main.js",
   "description": "Ushuaia CRM — Gestión integral de alfajores",
   "author": "Ushuaia Alfajores",
+  "homepage": "https://na7hk3r.github.io/ushuaia-crm/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/na7hk3r/ushuaia-crm.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
