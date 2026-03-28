@@ -1,9 +1,36 @@
 import { useState, useEffect } from 'react'
+import { version as pkgVersion } from '../../package.json'
+
+function parseSemver(v) {
+  const m = String(v).replace(/^v/, '').match(/^(\d+)\.(\d+)\.(\d+)/)
+  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [0, 0, 0]
+}
+
+function getSemverChange(currentVer, newVer) {
+  const [cMaj, cMin] = parseSemver(currentVer)
+  const [nMaj, nMin] = parseSemver(newVer)
+  if (nMaj !== cMaj) return 'major'
+  if (nMin !== cMin) return 'minor'
+  return 'patch'
+}
+
+const CHANGE_LABELS = {
+  major: { text: 'Major', color: '#DC2626' },
+  minor: { text: 'Minor', color: '#0EA5E9' },
+  patch: { text: 'Patch', color: '#16A34A' },
+}
 
 export default function UpdateBanner() {
   const [status, setStatus] = useState(null)
   const [version, setVersion] = useState('')
+  const [currentVersion, setCurrentVersion] = useState(pkgVersion)
   const [percent, setPercent] = useState(0)
+
+  useEffect(() => {
+    if (window.electronAPI?.getAppVersion) {
+      window.electronAPI.getAppVersion().then(v => setCurrentVersion(v)).catch(() => {})
+    }
+  }, [])
 
   useEffect(() => {
     const api = window.electronAPI
@@ -28,6 +55,9 @@ export default function UpdateBanner() {
 
   if (!status) return null
 
+  const changeType = version ? getSemverChange(currentVersion, version) : null
+  const badge = changeType ? CHANGE_LABELS[changeType] : null
+
   return (
     <div style={styles.wrapper}>
       <div style={styles.banner}>
@@ -39,7 +69,14 @@ export default function UpdateBanner() {
           </span>
           <div>
             <strong style={styles.title}>
-              {status === 'available' && `Nueva versión ${version} disponible`}
+              {status === 'available' && (
+                <>
+                  Nueva versión {version} disponible
+                  {badge && (
+                    <span style={{ ...styles.semverBadge, background: badge.color }}>{badge.text}</span>
+                  )}
+                </>
+              )}
               {status === 'downloading' && `Descargando actualización... ${percent}%`}
               {status === 'ready' && 'Actualización lista para instalar'}
             </strong>
@@ -164,5 +201,17 @@ const styles = {
     border: '1px solid #CBD5E1',
     borderRadius: 8,
     cursor: 'pointer',
+  },
+  semverBadge: {
+    display: 'inline-block',
+    fontSize: 10,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    color: '#fff',
+    padding: '2px 8px',
+    borderRadius: 99,
+    marginLeft: 8,
+    verticalAlign: 'middle',
   },
 }

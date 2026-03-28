@@ -47,7 +47,7 @@ export default function Sidebar({ active, onNavigate, companyName, companyLogo }
       </nav>
       <div className="sidebar-footer">
         <span>{companyName || 'Ushuaia Alfajores'} © {new Date().getFullYear()}</span>
-        <span className="version">{version ? `v${version}` : ''}</span>
+        <span className="version" title="Semantic Versioning: MAJOR.MINOR.PATCH">{version ? `v${version}` : ''}</span>
       </div>
     </aside>
   )

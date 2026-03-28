@@ -62,12 +62,15 @@ function renderReleases(releases) {
     const date = formatDate(release.published_at)
     const body = parseMarkdown(release.body || 'Sin notas de versión.')
     const isLatest = i === 0
+    const prev = releases[i + 1]
+    const changeType = prev ? getSemverChange(prev.tag_name, tag) : 'major'
 
     card.innerHTML = `
       <div class="release-header">
         <span class="release-tag">
           ${tag}
           ${isLatest ? '<span class="release-badge">Última</span>' : ''}
+          <span class="release-badge badge-${changeType}">${changeType}</span>
         </span>
         <span class="release-date">${date}</span>
       </div>
@@ -76,6 +79,21 @@ function renderReleases(releases) {
 
     container.appendChild(card)
   })
+}
+
+/* ── Semantic Versioning helpers ── */
+
+function parseSemver(tag) {
+  const m = tag.replace(/^v/, '').match(/^(\d+)\.(\d+)\.(\d+)/)
+  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [0, 0, 0]
+}
+
+function getSemverChange(prevTag, currTag) {
+  const [pMaj, pMin] = parseSemver(prevTag)
+  const [cMaj, cMin] = parseSemver(currTag)
+  if (cMaj !== pMaj) return 'major'
+  if (cMin !== pMin) return 'minor'
+  return 'patch'
 }
 
 function renderError() {
