@@ -19,6 +19,7 @@ function App() {
   const [rawMaterials, setRawMaterials] = useLocalStorage('ushuaia-materials', initialRawMaterials)
   const [production, setProduction] = useLocalStorage('ushuaia-production', initialProduction)
   const [settings, setSettings] = useLocalStorage('ushuaia-settings', defaultSettings)
+  const [demoCleared, setDemoCleared] = useLocalStorage('ushuaia-demo-cleared', false)
 
   function handleRestore(data) {
     if (data.clients) setClients(data.clients)
@@ -32,17 +33,18 @@ function App() {
     clients, products, materials: rawMaterials, production, settings
   }
 
-  const hasDemoData =
-    clients.some(c => demoClientIds.has(c.id)) ||
+  const hasDemoData = !demoCleared &&
+    (clients.some(c => demoClientIds.has(c.id)) ||
     products.some(p => demoProductIds.has(p.id)) ||
     rawMaterials.some(m => demoMaterialIds.has(m.id)) ||
-    production.some(p => demoProductionIds.has(p.id))
+    production.some(p => demoProductionIds.has(p.id)))
 
   function handleClearDemoData() {
     setClients(prev => prev.filter(c => !demoClientIds.has(c.id)))
     setProducts(prev => prev.filter(p => !demoProductIds.has(p.id)))
     setRawMaterials(prev => prev.filter(m => !demoMaterialIds.has(m.id)))
     setProduction(prev => prev.filter(p => !demoProductionIds.has(p.id)))
+    setDemoCleared(true)
   }
 
   function renderPage() {

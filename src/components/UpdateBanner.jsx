@@ -25,6 +25,7 @@ export default function UpdateBanner() {
   const [version, setVersion] = useState('')
   const [currentVersion, setCurrentVersion] = useState(pkgVersion)
   const [percent, setPercent] = useState(0)
+  const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
     if (window.electronAPI?.getAppVersion) {
@@ -41,6 +42,11 @@ export default function UpdateBanner() {
       setStatus('available')
     })
 
+    api.onUpdateNotAvailable?.(() => {
+      setStatus('up-to-date')
+      setTimeout(() => setStatus(null), 4000)
+    })
+
     api.onUpdateProgress((progress) => {
       setPercent(progress.percent)
       setStatus('downloading')
@@ -48,6 +54,12 @@ export default function UpdateBanner() {
 
     api.onUpdateDownloaded(() => {
       setStatus('ready')
+    })
+
+    api.onUpdateError?.((err) => {
+      setErrorMsg(err.message || 'Error al buscar actualizaciones')
+      setStatus('error')
+      setTimeout(() => setStatus(null), 6000)
     })
 
     return () => api.removeUpdateListeners()
@@ -60,12 +72,18 @@ export default function UpdateBanner() {
 
   return (
     <div style={styles.wrapper}>
-      <div style={styles.banner}>
+      <div style={{
+        ...styles.banner,
+        ...(status === 'up-to-date' ? { background: '#F0FDF4', border: '1px solid #BBF7D0', borderLeft: '4px solid #16A34A' } : {}),
+        ...(status === 'error' ? { background: '#FEF2F2', border: '1px solid #FECACA', borderLeft: '4px solid #DC2626' } : {}),
+      }}>
         <div style={styles.content}>
           <span style={styles.icon}>
             {status === 'available' && '✨'}
             {status === 'downloading' && '🔄'}
             {status === 'ready' && '✅'}
+            {status === 'up-to-date' && '✅'}
+            {status === 'error' && '⚠️'}
           </span>
           <div>
             <strong style={styles.title}>
@@ -79,6 +97,8 @@ export default function UpdateBanner() {
               )}
               {status === 'downloading' && `Descargando actualización... ${percent}%`}
               {status === 'ready' && 'Actualización lista para instalar'}
+              {status === 'up-to-date' && `Estás al día — v${currentVersion}`}
+              {status === 'error' && `Error: ${errorMsg}`}
             </strong>
             {status === 'downloading' && (
               <div style={styles.progressTrack}>

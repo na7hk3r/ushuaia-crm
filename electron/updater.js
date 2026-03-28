@@ -14,6 +14,12 @@ export function initAutoUpdater(mainWindow) {
     })
   })
 
+  autoUpdater.on('update-not-available', (info) => {
+    mainWindow.webContents.send('update-not-available', {
+      version: info.version,
+    })
+  })
+
   autoUpdater.on('download-progress', (progress) => {
     mainWindow.webContents.send('update-progress', {
       percent: Math.round(progress.percent),
@@ -26,6 +32,9 @@ export function initAutoUpdater(mainWindow) {
 
   autoUpdater.on('error', (err) => {
     console.error('Auto-updater error:', err.message)
+    mainWindow.webContents.send('update-error', {
+      message: err.message,
+    })
   })
 
   ipcMain.handle('start-update-download', () => {
