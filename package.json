@@ -14,12 +14,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "node --test src/utils/products.test.js src/utils/dataModel.test.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:dev": "vite",
     "electron:build": "vite build && electron-builder",
     "electron:preview": "vite build && electron .",
     "dist": "vite build && electron-builder",
+    "prepare-logo": "node scripts/prepare-logo.js",
     "release": "node scripts/release.js"
   },
   "dependencies": {

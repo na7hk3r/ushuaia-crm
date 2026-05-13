@@ -1,5 +1,9 @@
 import { useState, useRef } from 'react'
 import { backupData, restoreData } from '../utils/exportCSV'
+import { normalizeAppData } from '../utils/dataModel.js'
+import { calculateProductMargin, getProductPrice } from '../utils/products.js'
+import { OFFICIAL_LOGO_ALT, OFFICIAL_LOGO_URL } from '../constants/branding.js'
+import { version as pkgVersion } from '../../package.json'
 import UsageGuide from './UsageGuide'
 
 export default function Settings({ settings, setSettings, allData, onRestore, products }) {
@@ -49,14 +53,16 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
   function removeLogo() {
     updateField('companyLogo', '')
     if (logoInputRef.current) logoInputRef.current.value = ''
-    setMessage({ type: 'success', text: 'Logo eliminado. Se mostrará el emoji por defecto.' })
+    setMessage({ type: 'success', text: 'Logo personalizado eliminado. Se mostrara el logo oficial de Ushuaia.' })
   }
 
   async function handleBackup() {
     setMessage(null)
-    const result = await backupData(allData)
+    const result = await backupData(allData, pkgVersion)
     if (result.success) {
       setMessage({ type: 'success', text: 'Respaldo guardado correctamente' })
+    } else if (result.error) {
+      setMessage({ type: 'error', text: result.error })
     }
   }
 
@@ -64,11 +70,22 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
     setMessage(null)
     const result = await restoreData()
     if (result.success && result.data) {
-      const d = result.data
-      if (d.clients && d.products && d.materials && d.production) {
-        onRestore(d)
-        setMessage({ type: 'success', text: 'Datos restaurados correctamente' })
-      } else {
+      try {
+        const rawData = result.data?.data && typeof result.data.data === 'object' ? result.data.data : result.data
+        const hasRestoreShape =
+          Array.isArray(rawData.clients) &&
+          Array.isArray(rawData.products) &&
+          Array.isArray(rawData.materials) &&
+          Array.isArray(rawData.production)
+
+        if (hasRestoreShape) {
+          const d = normalizeAppData(result.data)
+          onRestore(d)
+          setMessage({ type: 'success', text: 'Datos restaurados correctamente' })
+        } else {
+          setMessage({ type: 'error', text: 'El archivo no tiene la estructura esperada' })
+        }
+      } catch {
         setMessage({ type: 'error', text: 'El archivo no tiene la estructura esperada' })
       }
     } else if (result.error) {
@@ -77,7 +94,7 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
   }
 
   const currency = settings.currency || '$'
-  const productList = products || []
+  const productList = (products || []).filter(p => !p.archived)
 
   return (
     <div className="page">
@@ -142,15 +159,15 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
         <div className="settings-section">
           <h3>🖼️ Logo de la Empresa</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px', lineHeight: '1.6' }}>
-            Subí el logo de tu empresa. Se mostrará en la barra lateral en lugar del emoji. Formatos aceptados: PNG, JPG. Máximo 512 KB.
+            Subí un logo personalizado si lo necesitás. Si no hay uno cargado, la app usa el logo oficial de Ushuaia. Formatos aceptados: PNG, JPG. Máximo 512 KB.
           </p>
           <div className="logo-upload-area">
             <div className="logo-preview">
-              {settings.companyLogo ? (
-                <img src={settings.companyLogo} alt="Logo" className="logo-img" />
-              ) : (
-                <span className="logo-placeholder">🏔️</span>
-              )}
+              <img
+                src={settings.companyLogo || OFFICIAL_LOGO_URL}
+                alt={settings.companyLogo ? 'Logo personalizado' : OFFICIAL_LOGO_ALT}
+                className={`logo-img${settings.companyLogo ? '' : ' logo-img-official'}`}
+              />
             </div>
             <div className="logo-actions">
               <input
@@ -165,7 +182,7 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
               </button>
               {settings.companyLogo && (
                 <button className="btn-ghost" onClick={removeLogo}>
-                  🗑️ Quitar logo
+                  🗑️ Quitar logo personalizado
                 </button>
               )}
             </div>
@@ -208,10 +225,9 @@ export default function Settings({ settings, setSettings, allData, onRestore, pr
               <strong>Resumen de precios actuales</strong>
               <div className="price-overview-list">
                 {productList.map(p => {
-                  const retail = p.retailPrice || p.price || 0
-                  const wholesale = p.wholesalePrice || 0
-                  const cost = p.productionCost || 0
-                  const margin = cost > 0 && retail > 0 ? Math.round(((retail - cost) / retail) * 100) : null
+                  const retail = getProductPrice(p, 'retail')
+                  const wholesale = Number(p.wholesalePrice || 0)
+                  const margin = calculateProductMargin(p, 'retail')
                   return (
                     <div className="price-overview-row" key={p.id}>
                       <span className="price-overview-name">{p.name}</span>

@@ -1,7 +1,31 @@
 import { useState, useMemo } from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { OFFICIAL_LOGO_ALT, OFFICIAL_LOGO_URL } from '../constants/branding.js'
+import { findProductByRef, getProductDisplayName } from '../utils/products.js'
 
-const CHART_BLUE = '#0EA5E9'
+const CHART_NAVY = '#102050'
+const CHART_ORANGE = '#F5A03F'
+const CHART_GREEN = '#059669'
+const CHART_AMBER = '#D97706'
+const CHART_RED = '#DC2626'
+const CHART_GRID = '#E2E8F0'
+const STATUS_LABELS = {
+  'en-progreso': 'En progreso',
+  planificado: 'Planificadas',
+  completado: 'Completadas',
+  cancelado: 'Canceladas',
+}
+const STATUS_COLORS = {
+  'en-progreso': CHART_ORANGE,
+  planificado: CHART_NAVY,
+  completado: CHART_GREEN,
+  cancelado: CHART_RED,
+}
+const PRICE_TYPE_COLORS = {
+  retail: CHART_NAVY,
+  wholesale: CHART_ORANGE,
+  other: '#94A3B8',
+}
 const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 const MONTH_NAMES_FULL = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 
@@ -18,13 +42,13 @@ export default function Dashboard({ clients, products, rawMaterials, production,
   const [calMonth, setCalMonth] = useState(currentMonth)
   const [calYear, setCalYear] = useState(currentYear)
   const [selectedDay, setSelectedDay] = useState(null)
+  const [advancedChartsOpen, setAdvancedChartsOpen] = useState(false)
 
   const totalClients = clients.length
+  const stockAlertsEnabled = settings?.stockAlertEnabled !== false
 
   const { currentMonthRevenue, currentMonthCost, lastMonthRevenue } = useMemo(() => {
     let revenue = 0, cost = 0, lastRev = 0
-    const productMap = {}
-    products.forEach(p => { productMap[p.name] = p })
     const lastM = currentMonth === 0 ? 11 : currentMonth - 1
     const lastY = currentMonth === 0 ? currentYear - 1 : currentYear
     clients.forEach(c => {
@@ -32,7 +56,7 @@ export default function Dashboard({ clients, products, rawMaterials, production,
         const d = new Date(o.date)
         if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
           revenue += o.total
-          const prod = productMap[o.product]
+          const prod = findProductByRef(products, o)
           if (prod && prod.productionCost) cost += prod.productionCost * (o.quantity || 0)
         }
         if (d.getMonth() === lastM && d.getFullYear() === lastY) lastRev += o.total
@@ -56,14 +80,12 @@ export default function Dashboard({ clients, products, rawMaterials, production,
     return deliveries.sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate))
   }, [clients])
 
-  const lowStockProducts = products.filter(p => p.stock <= p.minStock).length
-  const lowStockMaterials = rawMaterials.filter(m => m.stock <= m.minStock).length
+  const lowStockProducts = stockAlertsEnabled ? products.filter(p => !p.archived && p.stock <= p.minStock).length : 0
+  const lowStockMaterials = stockAlertsEnabled ? rawMaterials.filter(m => m.stock <= m.minStock).length : 0
   const totalAlerts = lowStockProducts + lowStockMaterials
 
   const chartData = useMemo(() => {
     const [startYear, startMonthNum] = chartStartMonth.split('-').map(Number)
-    const productMap = {}
-    products.forEach(p => { productMap[p.name] = p })
     const data = []
     for (let i = 0; i < chartMonths; i++) {
       const d = new Date(startYear, startMonthNum - 1 + i, 1)
@@ -75,7 +97,7 @@ export default function Dashboard({ clients, products, rawMaterials, production,
           const oDate = new Date(o.date)
           if (oDate.getFullYear() === y && oDate.getMonth() === m) {
             total += o.total
-            const prod = productMap[o.product]
+            const prod = findProductByRef(products, o)
             if (prod && prod.productionCost) cost += prod.productionCost * (o.quantity || 0)
           }
         })
@@ -144,6 +166,69 @@ export default function Dashboard({ clients, products, rawMaterials, production,
     totalUnits: production.filter(p => p.status !== 'cancelado').reduce((s, p) => s + p.quantity, 0),
   }), [production])
 
+  const productSalesData = useMemo(() => {
+    const byProduct = new Map()
+    clients.forEach(c => {
+      (c.orders || []).forEach(o => {
+        const name = getProductDisplayName(products, o)
+        const current = byProduct.get(name) || { name, unidades: 0, ingresos: 0, pedidos: 0 }
+        current.unidades += Number(o.quantity) || 0
+        current.ingresos += Number(o.total) || 0
+        current.pedidos += 1
+        byProduct.set(name, current)
+      })
+    })
+    return [...byProduct.values()]
+      .sort((a, b) => b.ingresos - a.ingresos)
+      .slice(0, 8)
+  }, [clients, products])
+
+  const productionStatusData = useMemo(() => {
+    const counts = new Map()
+    production.forEach(item => {
+      const status = item.status || 'planificado'
+      counts.set(status, (counts.get(status) || 0) + 1)
+    })
+    return ['en-progreso', 'planificado', 'completado', 'cancelado']
+      .map(status => ({ name: STATUS_LABELS[status], value: counts.get(status) || 0, color: STATUS_COLORS[status] }))
+      .filter(item => item.value > 0)
+  }, [production])
+
+  const priceTypeData = useMemo(() => {
+    const totals = {
+      retail: { name: 'Minorista', value: 0, ingresos: 0, color: PRICE_TYPE_COLORS.retail },
+      wholesale: { name: 'Mayorista', value: 0, ingresos: 0, color: PRICE_TYPE_COLORS.wholesale },
+      other: { name: 'Sin tipo', value: 0, ingresos: 0, color: PRICE_TYPE_COLORS.other },
+    }
+    clients.forEach(c => {
+      (c.orders || []).forEach(o => {
+        const key = o.priceType === 'wholesale' ? 'wholesale' : o.priceType === 'retail' ? 'retail' : 'other'
+        totals[key].value += 1
+        totals[key].ingresos += Number(o.total) || 0
+      })
+    })
+    return Object.values(totals).filter(item => item.value > 0)
+  }, [clients])
+
+  const stockCoverageData = useMemo(() => {
+    return products
+      .filter(product => !product.archived)
+      .map(product => {
+        const stock = Number(product.stock) || 0
+        const minStock = Number(product.minStock) || 0
+        const coverage = minStock > 0 ? Math.round((stock / minStock) * 100) : stock > 0 ? 100 : 0
+        return { name: product.name, stock, minimo: minStock, cobertura: coverage }
+      })
+      .sort((a, b) => a.cobertura - b.cobertura)
+      .slice(0, 8)
+  }, [products])
+
+  const hasAdvancedChartData = productSalesData.length > 0 || productionStatusData.length > 0 || priceTypeData.length > 0 || stockCoverageData.length > 0
+
+  function formatMoney(value) {
+    return `$${(Number(value) || 0).toLocaleString('es-UY')}`
+  }
+
   function renderCalendar() {
     const firstDay = new Date(calYear, calMonth, 1)
     const lastDay = new Date(calYear, calMonth + 1, 0)
@@ -203,8 +288,16 @@ export default function Dashboard({ clients, products, rawMaterials, production,
     <div className="dashboard">
       <div className="dashboard-header">
         <div className="dashboard-greeting">
-          <h2>🏔️ {settings?.companyName || 'Ushuaia Alfajores'}</h2>
-          <p>{now.toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <div className="dashboard-brand-logo">
+            <img
+              src={settings?.companyLogo || OFFICIAL_LOGO_URL}
+              alt={settings?.companyLogo ? 'Logo de la empresa' : OFFICIAL_LOGO_ALT}
+            />
+          </div>
+          <div>
+            <h2>{settings?.companyName || 'Ushuaia Alfajores'}</h2>
+            <p>{now.toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
         </div>
       </div>
 
@@ -273,7 +366,7 @@ export default function Dashboard({ clients, products, rawMaterials, production,
                   </div>
                   <div className="delivery-info">
                     <strong>{d.clientName}</strong>
-                    <span>{d.product || '-'} · {d.quantity} uds · ${d.total?.toLocaleString('es-UY')}</span>
+                    <span>{getProductDisplayName(products, d)} · {d.quantity} uds · ${d.total?.toLocaleString('es-UY')}</span>
                   </div>
                   <button className="btn-map-sm" onClick={() => openMap(d.clientAddress)} title="Ver en mapa">📍</button>
                 </div>
@@ -301,7 +394,7 @@ export default function Dashboard({ clients, products, rawMaterials, production,
               {deliveriesForDay.map((d, i) => (
                 <div className="cal-delivery-item" key={i}>
                   <span>{d.clientName}</span>
-                  <span>{d.product || '-'} · {d.quantity} uds</span>
+                  <span>{getProductDisplayName(products, d)} · {d.quantity} uds</span>
                   <span className={`badge ${d.delivered ? 'badge-green' : 'badge-amber'}`}>
                     {d.delivered ? '✅' : '📦'}
                   </span>
@@ -372,12 +465,12 @@ export default function Dashboard({ clients, products, rawMaterials, production,
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(v, name) => [`$${v.toLocaleString('es-UY')}`, name === 'ingresos' ? 'Ingresos' : name === 'costos' ? 'Costos' : 'Ganancia']} />
-              <Bar dataKey="ingresos" fill={CHART_BLUE} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="ganancia" fill="#22C55E" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="ingresos" fill={CHART_NAVY} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="ganancia" fill={CHART_GREEN} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -387,7 +480,7 @@ export default function Dashboard({ clients, products, rawMaterials, production,
           <div className="chart-card dash-card-tight dash-alerts-compact">
             <h3 className="dash-link-header" onClick={() => onNavigate('alerts')}>⚠️ Alertas de Reposición</h3>
             <div className="dash-alert-list">
-              {products.filter(p => p.stock <= p.minStock).map(p => (
+              {products.filter(p => !p.archived && p.stock <= p.minStock).map(p => (
                 <div className="dash-alert-row dash-alert-red" key={`p-${p.id}`}>
                   <span className="dash-alert-icon">📦</span>
                   <div className="dash-alert-body">
@@ -409,6 +502,99 @@ export default function Dashboard({ clients, products, rawMaterials, production,
           </div>
         )}
       </div>
+
+      <section className={`dashboard-graph-panel${advancedChartsOpen ? ' is-open' : ''}`}>
+        <button
+          type="button"
+          className="dashboard-graph-toggle"
+          onClick={() => setAdvancedChartsOpen(open => !open)}
+          aria-expanded={advancedChartsOpen}
+        >
+          <span className="graph-toggle-copy">
+            <span>Mas datos graficos</span>
+            <strong>Productos, stock, pedidos y produccion</strong>
+          </span>
+          <span className={`graph-toggle-icon${advancedChartsOpen ? '' : ' collapsed'}`}>v</span>
+        </button>
+
+        {advancedChartsOpen && (
+          <div className="dashboard-graph-body">
+            {!hasAdvancedChartData ? (
+              <p className="empty-message">Todavia no hay datos suficientes para graficar.</p>
+            ) : (
+              <div className="dashboard-graph-grid">
+                <div className="dashboard-graph-card">
+                  <h3>Ventas por producto</h3>
+                  {productSalesData.length === 0 ? (
+                    <p className="chart-empty-message">Sin ventas registradas.</p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart data={productSalesData} layout="vertical" margin={{ top: 8, right: 20, left: 8, bottom: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
+                        <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+                        <YAxis type="category" dataKey="name" width={116} tick={{ fontSize: 11 }} />
+                        <Tooltip formatter={(v, name, item) => [formatMoney(v), `Ingresos (${item.payload.unidades} uds)`]} />
+                        <Bar dataKey="ingresos" fill={CHART_NAVY} radius={[0, 6, 6, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+
+                <div className="dashboard-graph-card">
+                  <h3>Cobertura de stock</h3>
+                  {stockCoverageData.length === 0 ? (
+                    <p className="chart-empty-message">Sin productos activos.</p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart data={stockCoverageData} layout="vertical" margin={{ top: 8, right: 20, left: 8, bottom: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
+                        <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `${v}%`} />
+                        <YAxis type="category" dataKey="name" width={116} tick={{ fontSize: 11 }} />
+                        <Tooltip formatter={(v, name, item) => [`${v}% (${item.payload.stock}/${item.payload.minimo})`, 'Cobertura']} />
+                        <Bar dataKey="cobertura" fill={CHART_ORANGE} radius={[0, 6, 6, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+
+                <div className="dashboard-graph-card">
+                  <h3>Pedidos por precio</h3>
+                  {priceTypeData.length === 0 ? (
+                    <p className="chart-empty-message">Sin pedidos registrados.</p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={260}>
+                      <PieChart>
+                        <Pie data={priceTypeData} dataKey="value" nameKey="name" innerRadius={52} outerRadius={86} paddingAngle={3}>
+                          {priceTypeData.map(item => <Cell key={item.name} fill={item.color} />)}
+                        </Pie>
+                        <Tooltip formatter={(v, name, item) => [`${v} pedidos - ${formatMoney(item.payload.ingresos)}`, name]} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+
+                <div className="dashboard-graph-card">
+                  <h3>Produccion por estado</h3>
+                  {productionStatusData.length === 0 ? (
+                    <p className="chart-empty-message">Sin ordenes de produccion.</p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={260}>
+                      <PieChart>
+                        <Pie data={productionStatusData} dataKey="value" nameKey="name" innerRadius={52} outerRadius={86} paddingAngle={3}>
+                          {productionStatusData.map(item => <Cell key={item.name} fill={item.color} />)}
+                        </Pie>
+                        <Tooltip formatter={v => [`${v} ordenes`, 'Produccion']} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

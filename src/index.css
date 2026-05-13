@@ -5,13 +5,13 @@
 }
 
 :root {
-  /* ── Paleta Patagónica: Celeste Glaciar + Blanco Nieve ── */
-  --primary: #0EA5E9;
-  --primary-hover: #0284C7;
-  --primary-dark: #0369A1;
-  --primary-light: #E0F2FE;
-  --accent: #38BDF8;
-  --accent-light: #BAE6FD;
+  /* ── Paleta Ushuaia: Azul marca + Sol austral + Blanco nieve ── */
+  --primary: #102050;
+  --primary-hover: #172A66;
+  --primary-dark: #071337;
+  --primary-light: #E9EDF8;
+  --accent: #F5A03F;
+  --accent-light: #FFE4BC;
 
   /* ── Semánticos ── */
   --green: #059669;
@@ -23,7 +23,7 @@
 
   /* ── Superficies ── */
   --bg: #F8FAFC;
-  --bg-alt: #EFF6FF;
+  --bg-alt: #F2F5FB;
   --surface: #FFFFFF;
   --border: #CBD5E1;
   --border-light: #E2E8F0;
@@ -34,16 +34,16 @@
   --text-muted: #94A3B8;
 
   /* ── Sidebar ── */
-  --sidebar-bg: #0F172A;
-  --sidebar-bg-end: #1E293B;
-  --sidebar-text: #CBD5E1;
-  --sidebar-active: #0EA5E9;
+  --sidebar-bg: #071337;
+  --sidebar-bg-end: #102050;
+  --sidebar-text: #D8DEEF;
+  --sidebar-active: #F5A03F;
 
   /* ── Sombras ── */
-  --shadow-sm: 0 1px 2px rgba(14, 165, 233, 0.06);
-  --shadow: 0 1px 3px rgba(14, 165, 233, 0.1), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 12px rgba(14, 165, 233, 0.1), 0 2px 4px rgba(0,0,0,0.04);
-  --shadow-lg: 0 10px 25px rgba(14, 165, 233, 0.12), 0 4px 10px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 2px rgba(16, 32, 80, 0.06);
+  --shadow: 0 1px 3px rgba(16, 32, 80, 0.1), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(16, 32, 80, 0.1), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 25px rgba(16, 32, 80, 0.12), 0 4px 10px rgba(0,0,0,0.04);
 
   /* ── Radios ── */
   --radius: 8px;

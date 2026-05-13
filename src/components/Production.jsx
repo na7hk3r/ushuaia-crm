@@ -1,13 +1,23 @@
 import { useState } from 'react'
 import { exportCSV } from '../utils/exportCSV'
+import { findProductByRef, getActiveProducts, getProductDisplayName } from '../utils/products.js'
 
-const statusLabels = { 'planificado': '📋 Planificado', 'en-progreso': '🔧 En progreso', 'completado': '✅ Completado', 'cancelado': '❌ Cancelado' }
+const statusLabels = { 'planificado': 'Planificado', 'en-progreso': 'En progreso', 'completado': 'Completado', 'cancelado': 'Cancelado' }
 const statusColors = { 'planificado': 'badge-blue', 'en-progreso': 'badge-amber', 'completado': 'badge-green', 'cancelado': 'badge-red' }
+
+function getStatusLabel(status) {
+  return statusLabels[status] || status
+}
+
+function getStatusColor(status) {
+  return statusColors[status] || ''
+}
 
 export default function Production({ production, setProduction, products, settings }) {
   const productionStatuses = settings?.productionStatuses || ['planificado', 'en-progreso', 'completado', 'cancelado']
+  const activeProducts = getActiveProducts(products)
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ product: '', quantity: '', date: '', status: 'planificado' })
+  const [form, setForm] = useState({ productId: '', product: '', quantity: '', date: '', status: 'planificado' })
   const [editId, setEditId] = useState(null)
   const [filterStatus, setFilterStatus] = useState('')
 
@@ -20,21 +30,57 @@ export default function Production({ production, setProduction, products, settin
     totalUnits: production.filter(p => p.status !== 'cancelado').reduce((s, p) => s + p.quantity, 0),
   }
 
+  function getProductOptions() {
+    const current = editId ? findProductByRef(products, form) : null
+    if (!current || activeProducts.some(p => p.id === current.id)) return activeProducts
+    return [...activeProducts, current]
+  }
+
   function openNew() {
-    setForm({ product: products[0]?.name || '', quantity: '', date: new Date().toISOString().slice(0, 10), status: 'planificado' })
+    const firstProduct = activeProducts[0]
+    setForm({
+      productId: firstProduct?.id || '',
+      product: firstProduct?.name || '',
+      quantity: '',
+      date: new Date().toISOString().slice(0, 10),
+      status: productionStatuses[0] || 'planificado',
+    })
     setEditId(null)
     setShowForm(true)
   }
 
   function openEdit(item) {
-    setForm({ product: item.product, quantity: item.quantity, date: item.date, status: item.status })
+    const product = findProductByRef(products, item)
+    setForm({
+      productId: product?.id || item.productId || '',
+      product: item.product || product?.name || '',
+      quantity: item.quantity,
+      date: item.date,
+      status: item.status,
+    })
     setEditId(item.id)
     setShowForm(true)
   }
 
+  function handleProductChange(productId) {
+    const product = findProductByRef(products, { productId })
+    setForm(prev => ({
+      ...prev,
+      productId: product?.id || '',
+      product: product?.name || '',
+    }))
+  }
+
   function handleSave(e) {
     e.preventDefault()
-    const entry = { ...form, quantity: Number(form.quantity) }
+    const product = findProductByRef(products, form)
+    const entry = {
+      ...form,
+      productId: product?.id || (form.productId ? Number(form.productId) : null),
+      product: product?.name || form.product,
+      quantity: Number(form.quantity),
+    }
+
     if (editId) {
       setProduction(prev => prev.map(p => p.id === editId ? { ...entry, id: editId } : p))
     } else {
@@ -45,7 +91,7 @@ export default function Production({ production, setProduction, products, settin
   }
 
   function handleDelete(id) {
-    if (confirm('¿Eliminar esta orden de producción?')) {
+    if (confirm('Eliminar esta orden de produccion?')) {
       setProduction(prev => prev.filter(p => p.id !== id))
     }
   }
@@ -57,17 +103,17 @@ export default function Production({ production, setProduction, products, settin
   return (
     <div className="page">
       <div className="page-header">
-        <h2>Producción</h2>
+        <h2>Produccion</h2>
         <div className="header-actions">
           <div className="csv-tooltip-wrap">
             <button className="btn-export" onClick={() => exportCSV(production, [
-              { key: 'product', label: 'Producto' },
+              { label: 'Producto', transform: p => getProductDisplayName(products, p) },
               { key: 'quantity', label: 'Cantidad' },
               { key: 'date', label: 'Fecha' },
               { key: 'status', label: 'Estado' },
-            ], 'produccion.csv')}>📄 Exportar CSV</button>
+            ], 'produccion.csv')}>Exportar CSV</button>
             <div className="csv-tooltip">
-              Genera un archivo <strong>.csv</strong> que podés abrir en <strong>Excel</strong> o cualquier planilla de cálculo. También sirve como respaldo de esta sección.
+              Genera un archivo <strong>.csv</strong> que podes abrir en <strong>Excel</strong> o cualquier planilla de calculo. Tambien sirve como respaldo de esta seccion.
             </div>
           </div>
           <button className="btn-primary" onClick={openNew}>+ Nueva Orden</button>
@@ -76,31 +122,32 @@ export default function Production({ production, setProduction, products, settin
 
       <div className="kpi-grid four">
         <div className="kpi-card mini">
-          <span className="kpi-icon">📋</span>
+          <span className="kpi-icon">#</span>
           <div className="kpi-data"><span className="kpi-value">{stats.planificado}</span><span className="kpi-label">Planificadas</span></div>
         </div>
         <div className="kpi-card mini">
-          <span className="kpi-icon">🔧</span>
+          <span className="kpi-icon">*</span>
           <div className="kpi-data"><span className="kpi-value">{stats['en-progreso']}</span><span className="kpi-label">En progreso</span></div>
         </div>
         <div className="kpi-card mini">
-          <span className="kpi-icon">✅</span>
+          <span className="kpi-icon">OK</span>
           <div className="kpi-data"><span className="kpi-value">{stats.completado}</span><span className="kpi-label">Completadas</span></div>
         </div>
         <div className="kpi-card mini">
-          <span className="kpi-icon">📦</span>
+          <span className="kpi-icon">U</span>
           <div className="kpi-data"><span className="kpi-value">{stats.totalUnits}</span><span className="kpi-label">Unidades totales</span></div>
         </div>
       </div>
 
       {showForm && (
         <form className="form-card inline-form" onSubmit={handleSave}>
-          <h3>{editId ? 'Editar Orden' : 'Nueva Orden de Producción'}</h3>
+          <h3>{editId ? 'Editar Orden' : 'Nueva Orden de Produccion'}</h3>
           <div className="form-grid">
             <div className="form-group">
               <label>Producto</label>
-              <select value={form.product} onChange={e => setForm({ ...form, product: e.target.value })} required>
-                {products.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+              <select value={form.productId} onChange={e => handleProductChange(e.target.value)} required>
+                <option value="">Seleccionar...</option>
+                {getProductOptions().map(p => <option key={p.id} value={p.id}>{p.name}{p.archived ? ' (archivado)' : ''}</option>)}
               </select>
             </div>
             <div className="form-group">
@@ -146,19 +193,19 @@ export default function Production({ production, setProduction, products, settin
           <tbody>
             {filtered.map(p => (
               <tr key={p.id}>
-                <td className="td-main">{p.product}</td>
+                <td className="td-main">{getProductDisplayName(products, p)}</td>
                 <td>{p.quantity}</td>
                 <td>{p.date}</td>
-                <td><span className={`badge ${statusColors[p.status]}`}>{statusLabels[p.status]}</span></td>
+                <td><span className={`badge ${getStatusColor(p.status)}`}>{getStatusLabel(p.status)}</span></td>
                 <td className="td-actions">
                   {p.status === 'planificado' && <button className="btn-sm" onClick={() => updateStatus(p.id, 'en-progreso')}>Iniciar</button>}
                   {p.status === 'en-progreso' && <button className="btn-sm btn-sm-green" onClick={() => updateStatus(p.id, 'completado')}>Completar</button>}
                   <button className="btn-sm" onClick={() => openEdit(p)}>Editar</button>
-                  <button className="btn-sm btn-sm-red" onClick={() => handleDelete(p.id)}>✕</button>
+                  <button className="btn-sm btn-sm-red" onClick={() => handleDelete(p.id)}>x</button>
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={5} className="empty">Sin órdenes de producción</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={5} className="empty">Sin ordenes de produccion</td></tr>}
           </tbody>
         </table>
       </div>

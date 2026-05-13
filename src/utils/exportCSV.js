@@ -1,3 +1,5 @@
+import { makeBackupEnvelope } from './dataModel.js'
+
 /**
  * Genera contenido CSV a partir de un array de objetos.
  * @param {Array<Object>} data - Los datos a exportar
@@ -40,12 +42,14 @@ export async function exportCSV(data, columns, defaultName = 'export.csv') {
 /**
  * Respaldo: exportar todos los datos como JSON.
  */
-export async function backupData(allData) {
+export async function backupData(allData, appVersion = '') {
+  const backupPayload = makeBackupEnvelope(allData, appVersion)
+
   if (window.electronAPI?.isElectron) {
-    return window.electronAPI.backupData(allData)
+    return window.electronAPI.backupData(backupPayload)
   }
 
-  const json = JSON.stringify(allData, null, 2)
+  const json = JSON.stringify(backupPayload, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

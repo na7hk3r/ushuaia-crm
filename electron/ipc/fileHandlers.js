@@ -1,5 +1,8 @@
-import { ipcMain, dialog } from 'electron'
+import { createRequire } from 'node:module'
 import { writeFile, readFile } from 'node:fs/promises'
+
+const require = createRequire(import.meta.url)
+const { ipcMain, dialog } = require('electron')
 
 export function registerFileHandlers(mainWindow) {
   // ─── Export CSV ─────────────────────────────────────────────
@@ -16,27 +19,35 @@ export function registerFileHandlers(mainWindow) {
 
   // ─── Respaldo ───────────────────────────────────────────────
   ipcMain.handle('backup-data', async (_event, jsonData) => {
-    const timestamp = new Date().toISOString().slice(0, 10)
-    const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
-      title: 'Guardar Respaldo',
-      defaultPath: `ushuaia-respaldo-${timestamp}.json`,
-      filters: [{ name: 'JSON', extensions: ['json'] }],
-    })
-    if (canceled || !filePath) return { success: false }
-    await writeFile(filePath, JSON.stringify(jsonData, null, 2), 'utf-8')
-    return { success: true, filePath }
+    try {
+      const timestamp = new Date().toISOString().slice(0, 10)
+      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+        title: 'Guardar Respaldo',
+        defaultPath: `ushuaia-respaldo-${timestamp}.json`,
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+      })
+      if (canceled || !filePath) return { success: false }
+      await writeFile(filePath, JSON.stringify(jsonData, null, 2), 'utf-8')
+      return { success: true, filePath }
+    } catch (err) {
+      return { success: false, error: err.message || 'No se pudo guardar el respaldo' }
+    }
   })
 
   // ─── Restore ────────────────────────────────────────────────
   ipcMain.handle('restore-data', async () => {
-    const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
-      title: 'Restaurar Respaldo',
-      filters: [{ name: 'JSON', extensions: ['json'] }],
-      properties: ['openFile'],
-    })
-    if (canceled || filePaths.length === 0) return { success: false }
-    const raw = await readFile(filePaths[0], 'utf-8')
-    const data = JSON.parse(raw)
-    return { success: true, data }
+    try {
+      const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+        title: 'Restaurar Respaldo',
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+        properties: ['openFile'],
+      })
+      if (canceled || filePaths.length === 0) return { success: false }
+      const raw = await readFile(filePaths[0], 'utf-8')
+      const data = JSON.parse(raw)
+      return { success: true, data }
+    } catch {
+      return { success: false, error: 'Archivo JSON invalido o no legible' }
+    }
   })
 }

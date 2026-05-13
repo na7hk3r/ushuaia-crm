@@ -1,9 +1,12 @@
 import updater from 'electron-updater'
-import { ipcMain } from 'electron'
+import { createRequire } from 'node:module'
 
-const { autoUpdater } = updater
+const require = createRequire(import.meta.url)
+const { ipcMain } = require('electron')
 
 export function initAutoUpdater(mainWindow, { autoCheck = true } = {}) {
+  const { autoUpdater } = updater
+
   autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = true
 
@@ -37,20 +40,36 @@ export function initAutoUpdater(mainWindow, { autoCheck = true } = {}) {
     })
   })
 
-  ipcMain.handle('start-update-download', () => {
-    autoUpdater.downloadUpdate()
+  ipcMain.handle('start-update-download', async () => {
+    try {
+      await autoUpdater.downloadUpdate()
+      return { success: true }
+    } catch (err) {
+      mainWindow.webContents.send('update-error', {
+        message: err.message || 'No se pudo descargar la actualizacion',
+      })
+      return { success: false, error: err.message }
+    }
   })
 
   ipcMain.handle('check-for-updates', async () => {
     mainWindow.webContents.send('update-checking')
+
+    if (!autoCheck) {
+      mainWindow.webContents.send('update-error', {
+        message: 'Las actualizaciones solo estan disponibles en la version instalada',
+      })
+      return { success: false }
+    }
+
     try {
       await autoUpdater.checkForUpdates()
+      return { success: true }
     } catch (err) {
       mainWindow.webContents.send('update-error', {
-        message: autoCheck
-          ? err.message
-          : 'Las actualizaciones solo están disponibles en la versión instalada',
+        message: err.message || 'No se pudo buscar actualizaciones',
       })
+      return { success: false, error: err.message }
     }
   })
 

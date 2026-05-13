@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'dist-electron', 'release']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -24,10 +24,33 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'react-hooks/preserve-manual-memoization': 'off',
+    },
+  },
+  {
+    files: ['electron/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+      },
+    },
+  },
+  {
+    files: ['electron/preload.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: globals.node,
     },
   },
   {
     files: ['scripts/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
+    files: ['src/**/*.test.js'],
     languageOptions: {
       globals: globals.node,
     },

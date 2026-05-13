@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 
-export function useLocalStorage(key, initialValue) {
+export function useLocalStorage(key, initialValue, migrate) {
   const [value, setValue] = useState(() => {
+    const normalize = typeof migrate === 'function' ? migrate : value => value
     try {
       const stored = localStorage.getItem(key)
-      return stored ? JSON.parse(stored) : initialValue
+      return normalize(stored ? JSON.parse(stored) : initialValue)
     } catch {
-      return initialValue
+      return normalize(initialValue)
     }
   })
 

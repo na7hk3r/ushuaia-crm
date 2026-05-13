@@ -95,10 +95,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run tests
+        run: npm test
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build web and Electron bundles
+        run: npm run build
+
       - name: Build & Publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist -- --publish always
+
+      - name: Verify updater artifacts
+        shell: pwsh
+        run: |
+          $exeFiles = Get-ChildItem -Path release -Filter "*.exe" -ErrorAction SilentlyContinue
+          if (-not $exeFiles) {
+            Write-Error "No Windows .exe artifacts were generated."
+          }
+          if (-not (Test-Path "release/latest.yml")) {
+            Write-Error "latest.yml is required by electron-updater but was not generated."
+          }
+          Write-Host "Release artifacts verified:"
+          $exeFiles | ForEach-Object { Write-Host " - $($_.Name)" }
+          Write-Host " - latest.yml"
 
       - name: Update GitHub Release body
         shell: bash

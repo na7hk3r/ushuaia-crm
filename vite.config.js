@@ -1,17 +1,15 @@
 import { defineConfig } from 'vite'
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
-import babel from '@rolldown/plugin-babel'
+import react from '@vitejs/plugin-react'
 import electron from 'vite-plugin-electron'
-import renderer from 'vite-plugin-electron-renderer'
 
 export default defineConfig({
   base: './',
   plugins: [
     react(),
-    babel({ presets: [reactCompilerPreset()] }),
     electron([
       {
         entry: 'electron/main.js',
+        onstart() {},
         vite: {
           build: {
             rollupOptions: { external: ['electron', 'electron-updater'] },
@@ -21,7 +19,7 @@ export default defineConfig({
       },
       {
         entry: 'electron/preload.js',
-        onstart(args) { args.reload() },
+        onstart() {},
         vite: {
           build: {
             outDir: 'dist-electron',
@@ -29,6 +27,5 @@ export default defineConfig({
         },
       },
     ]),
-    renderer(),
   ],
 })

@@ -240,14 +240,14 @@ const s = {
   li: { marginBottom: 4, fontSize: 14, color: '#334155' },
   blockquote: {
     margin: '12px 0', padding: '10px 16px',
-    borderLeft: '3px solid #0EA5E9', background: '#F0F9FF',
+    borderLeft: '3px solid #F5A03F', background: '#E9EDF8',
     borderRadius: '0 8px 8px 0',
   },
   code: {
     background: '#E2E8F0', padding: '2px 6px', borderRadius: 4,
     fontFamily: 'monospace', fontSize: 13, color: '#0F172A',
   },
-  link: { color: '#0EA5E9', fontWeight: 500 },
+  link: { color: '#102050', fontWeight: 500 },
   tableWrap: { overflowX: 'auto', margin: '12px 0' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 14 },
   th: { textAlign: 'left', padding: '8px 12px', borderBottom: '2px solid #CBD5E1', fontWeight: 600, color: '#0F172A', background: '#F1F5F9' },

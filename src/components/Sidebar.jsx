@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { version as pkgVersion } from '../../package.json'
+import { OFFICIAL_LOGO_ALT, OFFICIAL_LOGO_URL } from '../constants/branding.js'
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -13,6 +14,8 @@ const menuItems = [
 
 export default function Sidebar({ active, onNavigate, companyName, companyLogo }) {
   const [version, setVersion] = useState(pkgVersion)
+  const hasCustomLogo = Boolean(companyLogo)
+  const logoSrc = hasCustomLogo ? companyLogo : OFFICIAL_LOGO_URL
 
   useEffect(() => {
     if (window.electronAPI?.getAppVersion) {
@@ -22,15 +25,13 @@ export default function Sidebar({ active, onNavigate, companyName, companyLogo }
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">
-        {companyLogo ? (
-          <img src={companyLogo} alt="Logo" className="brand-logo" />
-        ) : (
-          <span className="brand-icon">🏔️</span>
-        )}
-        <div>
-          <h1 className="brand-name">{companyName || 'Ushuaia'}</h1>
-          <span className="brand-sub">Alfajores · CRM</span>
+      <div className={`sidebar-brand${hasCustomLogo ? '' : ' sidebar-brand-official'}`}>
+        <div className="brand-logo-frame">
+          <img
+            src={logoSrc}
+            alt={hasCustomLogo ? 'Logo de la empresa' : OFFICIAL_LOGO_ALT}
+            className={`brand-logo${hasCustomLogo ? ' brand-logo-custom' : ' brand-logo-official'}`}
+          />
         </div>
       </div>
       <nav className="sidebar-nav">

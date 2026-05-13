@@ -1,11 +1,13 @@
-import { app, BrowserWindow, shell } from 'electron'
-import { join } from 'node:path'
+import { createRequire } from 'node:module'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { registerFileHandlers } from './ipc/fileHandlers.js'
 import { registerAppHandlers } from './ipc/appHandlers.js'
 import { initAutoUpdater } from './updater.js'
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
+const require = createRequire(import.meta.url)
+const { app, BrowserWindow, shell } = require('electron')
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 let mainWindow = null
 

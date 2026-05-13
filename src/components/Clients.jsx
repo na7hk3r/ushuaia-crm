@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { exportCSV } from '../utils/exportCSV'
+import { calculateOrderProfit, findProductByRef, getActiveProducts, getProductDisplayName, getProductPrice } from '../utils/products.js'
 
 const emptyClient = {
   name: '', contact: '', email: '', phone: '', address: '', category: 'minorista', notes: '', orders: []
@@ -8,13 +9,16 @@ const emptyClient = {
 
 export default function Clients({ clients, setClients, settings, products }) {
   const clientCategories = settings?.clientCategories || ['distribuidor', 'minorista', 'gastronomia', 'supermercado', 'mayorista']
+  const activeProducts = getActiveProducts(products || [])
+  const defaultPriceType = settings?.defaultPriceType === 'wholesale' ? 'wholesale' : 'retail'
   const [view, setView] = useState('list') // list | form | detail
   const [selected, setSelected] = useState(null)
   const [form, setForm] = useState({ ...emptyClient })
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState('')
   const [showOrderForm, setShowOrderForm] = useState(false)
-  const [orderForm, setOrderForm] = useState({ product: '', quantity: '', total: '', deliveryDate: '', priceType: 'retail' })
+  const [orderForm, setOrderForm] = useState({ productId: '', product: '', quantity: '', total: '', deliveryDate: '', priceType: defaultPriceType })
+  const [orderError, setOrderError] = useState('')
 
   const filtered = clients.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -59,36 +63,38 @@ export default function Clients({ clients, setClients, settings, products }) {
     }
   }
 
-  function getProductPrice(prod, priceType) {
-    if (!prod) return 0
-    if (priceType === 'wholesale') return prod.wholesalePrice || prod.retailPrice || prod.price || 0
-    return prod.retailPrice || prod.price || 0
+  function resetOrderForm() {
+    setOrderForm({ productId: '', product: '', quantity: '', total: '', deliveryDate: '', priceType: defaultPriceType })
+    setOrderError('')
   }
 
-  function handleProductChange(productName) {
-    const prod = (products || []).find(p => p.name === productName)
+  function handleProductChange(productId) {
+    const prod = findProductByRef(products || [], { productId })
     const qty = Number(orderForm.quantity) || 1
     const unitPrice = getProductPrice(prod, orderForm.priceType)
     setOrderForm(prev => ({
       ...prev,
-      product: productName,
+      productId: prod?.id || '',
+      product: prod?.name || '',
       total: prod ? String(unitPrice * qty) : prev.total,
     }))
+    setOrderError('')
   }
 
   function handleQuantityChange(val) {
     const qty = Number(val) || 0
-    const prod = (products || []).find(p => p.name === orderForm.product)
+    const prod = findProductByRef(products || [], orderForm)
     const unitPrice = getProductPrice(prod, orderForm.priceType)
     setOrderForm(prev => ({
       ...prev,
       quantity: val,
       total: prod ? String(unitPrice * qty) : prev.total,
     }))
+    setOrderError('')
   }
 
   function handlePriceTypeChange(priceType) {
-    const prod = (products || []).find(p => p.name === orderForm.product)
+    const prod = findProductByRef(products || [], orderForm)
     const qty = Number(orderForm.quantity) || 1
     const unitPrice = getProductPrice(prod, priceType)
     setOrderForm(prev => ({
@@ -96,20 +102,42 @@ export default function Clients({ clients, setClients, settings, products }) {
       priceType,
       total: prod ? String(unitPrice * qty) : prev.total,
     }))
+    setOrderError('')
   }
 
   function handleAddOrder(e) {
     e.preventDefault()
+    const prod = findProductByRef(products || [], orderForm)
+    const quantity = Number(orderForm.quantity)
     const total = Number(orderForm.total)
-    if (!orderForm.product || !orderForm.quantity || isNaN(total) || total <= 0) return
+
+    if (!selected) {
+      setOrderError('No hay un cliente seleccionado para agregar el pedido.')
+      return
+    }
+    if (!prod) {
+      setOrderError('Selecciona un producto activo para el pedido.')
+      return
+    }
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      setOrderError('Ingresa una cantidad mayor a cero.')
+      return
+    }
+    if (!Number.isFinite(total) || total <= 0) {
+      setOrderError('Ingresa un total mayor a cero.')
+      return
+    }
+
     const date = new Date().toISOString().slice(0, 10)
     const newOrder = {
       date,
-      product: orderForm.product,
-      quantity: Number(orderForm.quantity),
+      productId: prod.id,
+      product: prod.name,
+      quantity,
       total,
       deliveryDate: orderForm.deliveryDate || '',
       delivered: false,
+      priceType: orderForm.priceType,
     }
     setClients(prev => prev.map(c =>
       c.id === selected.id
@@ -117,7 +145,7 @@ export default function Clients({ clients, setClients, settings, products }) {
         : c
     ))
     setSelected(prev => ({ ...prev, orders: [...prev.orders, newOrder] }))
-    setOrderForm({ product: '', quantity: '', total: '', deliveryDate: '', priceType: 'retail' })
+    resetOrderForm()
     setShowOrderForm(false)
   }
 
@@ -219,7 +247,15 @@ export default function Clients({ clients, setClients, settings, products }) {
           <div className="detail-card">
             <div className="detail-card-header">
               <h3>Pedidos ({selected.orders.length})</h3>
-              <button className="btn-sm" onClick={() => setShowOrderForm(!showOrderForm)}>
+              <button className="btn-sm" onClick={() => {
+                if (!showOrderForm) {
+                  resetOrderForm()
+                  if (activeProducts.length === 0) {
+                    setOrderError('Primero agrega o restaura un producto activo en Stock.')
+                  }
+                }
+                setShowOrderForm(!showOrderForm)
+              }}>
                 {showOrderForm ? '✕ Cancelar' : '+ Agregar pedido'}
               </button>
             </div>
@@ -227,14 +263,15 @@ export default function Clients({ clients, setClients, settings, products }) {
 
             {showOrderForm && (
               <form className="order-inline-form" onSubmit={handleAddOrder}>
+                {orderError && <p className="form-error">{orderError}</p>}
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Producto</label>
-                    <select value={orderForm.product} onChange={e => handleProductChange(e.target.value)} required>
+                    <select value={orderForm.productId} onChange={e => handleProductChange(e.target.value)} required>
                       <option value="">Seleccionar...</option>
-                      {(products || []).map(p => {
+                      {activeProducts.map(p => {
                         const uInfo = (p.unitsPerBox || 1) > 1 ? ` (${p.unitsPerBox} alfajores)` : ''
-                        return <option key={p.id} value={p.name}>{p.name}{uInfo}</option>
+                        return <option key={p.id} value={p.id}>{p.name}{uInfo}</option>
                       })}
                     </select>
                   </div>
@@ -259,16 +296,15 @@ export default function Clients({ clients, setClients, settings, products }) {
                   </div>
                 </div>
                 {(() => {
-                  const prod = (products || []).find(p => p.name === orderForm.product)
+                  const prod = findProductByRef(products || [], orderForm)
                   if (!prod) return null
                   const units = prod.unitsPerBox || 1
-                  const retail = prod.retailPrice || prod.price || 0
                   const wholesale = prod.wholesalePrice || 0
                   const cost = prod.productionCost || 0
-                  const selectedPrice = orderForm.priceType === 'wholesale' ? wholesale : retail
+                  const selectedPrice = getProductPrice(prod, orderForm.priceType)
                   const qty = Number(orderForm.quantity) || 0
                   const totalAlf = units * qty
-                  const profit = cost > 0 && qty > 0 ? (selectedPrice - cost) * qty : null
+                  const profit = calculateOrderProfit(prod, qty, orderForm.priceType)
                   return (
                     <div className="order-price-summary">
                       <span>📦 {totalAlf} alfajor{totalAlf !== 1 ? 'es' : ''} total{units > 1 ? ` (${qty} × ${units})` : ''}</span>
@@ -286,11 +322,11 @@ export default function Clients({ clients, setClients, settings, products }) {
             {chartData.length > 1 && (
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
                   <XAxis dataKey="fecha" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={v => `$${v / 1000}k`} />
                   <Tooltip formatter={v => [`$${v.toLocaleString()}`, 'Monto']} />
-                  <Line type="monotone" dataKey="monto" stroke="#3B82F6" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="monto" stroke="var(--primary)" strokeWidth={2} dot={{ r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             )}
@@ -300,7 +336,7 @@ export default function Clients({ clients, setClients, settings, products }) {
                 return (
                   <div className={`order-row${o.delivered === false ? ' order-pending' : ''}`} key={i}>
                     <span>{o.date}</span>
-                    <span className="order-product">{o.product || '-'}</span>
+                    <span className="order-product">{getProductDisplayName(products || [], o)}</span>
                     <span>{o.quantity ? `${o.quantity} uds` : '-'}</span>
                     <strong>${o.total.toLocaleString()}</strong>
                     {o.deliveryDate && (

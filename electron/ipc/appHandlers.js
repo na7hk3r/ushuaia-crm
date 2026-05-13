@@ -1,7 +1,8 @@
-import { ipcMain, app, shell } from 'electron'
+import { createRequire } from 'node:module'
 import updater from 'electron-updater'
 
-const { autoUpdater } = updater
+const require = createRequire(import.meta.url)
+const { ipcMain, app, shell } = require('electron')
 
 const ALLOWED_ORIGINS = [
   'https://na7hk3r.github.io',
@@ -13,7 +14,7 @@ export function registerAppHandlers() {
   ipcMain.handle('get-app-version', () => app.getVersion())
 
   ipcMain.handle('restart-for-update', () => {
-    autoUpdater.quitAndInstall()
+    updater.autoUpdater.quitAndInstall()
   })
 
   ipcMain.handle('open-external', async (_event, url) => {

@@ -16,8 +16,27 @@ function getSemverChange(currentVer, newVer) {
 
 const CHANGE_LABELS = {
   major: { text: 'Major', color: '#DC2626' },
-  minor: { text: 'Minor', color: '#0EA5E9' },
+  minor: { text: 'Minor', color: '#102050' },
   patch: { text: 'Patch', color: '#16A34A' },
+}
+
+function getFriendlyUpdateError(message = '') {
+  const text = String(message)
+  const lower = text.toLowerCase()
+
+  if (lower.includes('net::') || lower.includes('enotfound') || lower.includes('econn') || lower.includes('timeout')) {
+    return 'No se pudo conectar para buscar actualizaciones. Revisá la conexión e intentá de nuevo.'
+  }
+
+  if (lower.includes('dev') || lower.includes('installed') || lower.includes('instalada')) {
+    return 'Las actualizaciones solo se instalan desde la versión instalada.'
+  }
+
+  if (lower.includes('latest') || lower.includes('release') || lower.includes('404')) {
+    return 'No se encontró una versión publicada para actualizar.'
+  }
+
+  return text || 'Error al buscar actualizaciones'
 }
 
 export default function UpdateBanner() {
@@ -61,7 +80,7 @@ export default function UpdateBanner() {
     })
 
     api.onUpdateError?.((err) => {
-      setErrorMsg(err.message || 'Error al buscar actualizaciones')
+      setErrorMsg(getFriendlyUpdateError(err.message))
       setStatus('error')
       setTimeout(() => setStatus(null), 6000)
     })
@@ -168,9 +187,9 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    background: '#E0F2FE',
-    border: '1px solid #BAE6FD',
-    borderLeft: '4px solid #0EA5E9',
+    background: '#E9EDF8',
+    border: '1px solid #CBD5E1',
+    borderLeft: '4px solid #F5A03F',
     borderRadius: 12,
     padding: '10px 18px',
   },
@@ -194,14 +213,14 @@ const styles = {
     marginTop: 6,
     height: 6,
     borderRadius: 3,
-    background: '#BAE6FD',
+    background: '#FFE4BC',
     overflow: 'hidden',
     width: 220,
   },
   progressBar: {
     height: '100%',
     borderRadius: 3,
-    background: 'linear-gradient(90deg, #0EA5E9, #38BDF8)',
+    background: 'linear-gradient(90deg, #102050, #F5A03F)',
     transition: 'width 0.3s ease',
   },
   actions: {
@@ -214,7 +233,7 @@ const styles = {
     fontSize: 13,
     fontWeight: 600,
     color: '#fff',
-    background: 'linear-gradient(135deg, #0EA5E9, #0284C7)',
+    background: 'linear-gradient(135deg, #102050, #172A66)',
     border: 'none',
     borderRadius: 8,
     cursor: 'pointer',

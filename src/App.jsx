@@ -1,32 +1,35 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import './App.css'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { initialClients, initialProducts, initialRawMaterials, initialProduction, defaultSettings, demoClientIds, demoProductIds, demoMaterialIds, demoProductionIds } from './data/initialData'
+import { hasDataChanged, normalizeAppData, normalizeClients, normalizeMaterials, normalizeProduction, normalizeProducts, normalizeSettings } from './utils/dataModel.js'
 import Sidebar from './components/Sidebar'
-import Dashboard from './components/Dashboard'
-import Clients from './components/Clients'
-import Production from './components/Production'
-import Stock from './components/Stock'
-import Materials from './components/Materials'
-import Settings from './components/Settings'
-import Alerts from './components/Alerts'
 import UpdateBanner from './components/UpdateBanner'
+
+const Dashboard = lazy(() => import('./components/Dashboard'))
+const Clients = lazy(() => import('./components/Clients'))
+const Production = lazy(() => import('./components/Production'))
+const Stock = lazy(() => import('./components/Stock'))
+const Materials = lazy(() => import('./components/Materials'))
+const Settings = lazy(() => import('./components/Settings'))
+const Alerts = lazy(() => import('./components/Alerts'))
 
 function App() {
   const [page, setPage] = useState('dashboard')
-  const [clients, setClients] = useLocalStorage('ushuaia-clients', initialClients)
-  const [products, setProducts] = useLocalStorage('ushuaia-products', initialProducts)
-  const [rawMaterials, setRawMaterials] = useLocalStorage('ushuaia-materials', initialRawMaterials)
-  const [production, setProduction] = useLocalStorage('ushuaia-production', initialProduction)
-  const [settings, setSettings] = useLocalStorage('ushuaia-settings', defaultSettings)
+  const [clients, setClients] = useLocalStorage('ushuaia-clients', initialClients, normalizeClients)
+  const [products, setProducts] = useLocalStorage('ushuaia-products', initialProducts, normalizeProducts)
+  const [rawMaterials, setRawMaterials] = useLocalStorage('ushuaia-materials', initialRawMaterials, normalizeMaterials)
+  const [production, setProduction] = useLocalStorage('ushuaia-production', initialProduction, normalizeProduction)
+  const [settings, setSettings] = useLocalStorage('ushuaia-settings', defaultSettings, normalizeSettings)
   const [demoCleared, setDemoCleared] = useLocalStorage('ushuaia-demo-cleared', false)
 
   function handleRestore(data) {
-    if (data.clients) setClients(data.clients)
-    if (data.products) setProducts(data.products)
-    if (data.materials) setRawMaterials(data.materials)
-    if (data.production) setProduction(data.production)
-    if (data.settings) setSettings(data.settings)
+    const normalized = normalizeAppData(data)
+    setClients(normalized.clients)
+    setProducts(normalized.products)
+    setRawMaterials(normalized.materials)
+    setProduction(normalized.production)
+    setSettings(normalized.settings)
   }
 
   const allData = {
@@ -38,6 +41,16 @@ function App() {
     products.some(p => demoProductIds.has(p.id)) ||
     rawMaterials.some(m => demoMaterialIds.has(m.id)) ||
     production.some(p => demoProductionIds.has(p.id)))
+
+  useEffect(() => {
+    const normalized = normalizeAppData({ clients, products, materials: rawMaterials, production, settings })
+
+    if (hasDataChanged(clients, normalized.clients)) setClients(normalized.clients)
+    if (hasDataChanged(products, normalized.products)) setProducts(normalized.products)
+    if (hasDataChanged(rawMaterials, normalized.materials)) setRawMaterials(normalized.materials)
+    if (hasDataChanged(production, normalized.production)) setProduction(normalized.production)
+    if (hasDataChanged(settings, normalized.settings)) setSettings(normalized.settings)
+  }, [clients, products, rawMaterials, production, settings, setClients, setProducts, setRawMaterials, setProduction, setSettings])
 
   // Auto-mark demo as cleared when all demo items have been removed manually
   useEffect(() => {
@@ -61,13 +74,13 @@ function App() {
   function renderPage() {
     switch (page) {
       case 'alerts':
-        return <Alerts clients={clients} products={products} rawMaterials={rawMaterials} production={production} onNavigate={setPage} />
+        return <Alerts clients={clients} products={products} rawMaterials={rawMaterials} production={production} settings={settings} onNavigate={setPage} />
       case 'clients':
         return <Clients clients={clients} setClients={setClients} settings={settings} products={products} />
       case 'production':
         return <Production production={production} setProduction={setProduction} products={products} settings={settings} />
       case 'stock':
-        return <Stock products={products} setProducts={setProducts} settings={settings} />
+        return <Stock products={products} setProducts={setProducts} clients={clients} production={production} settings={settings} />
       case 'materials':
         return <Materials materials={rawMaterials} setMaterials={setRawMaterials} settings={settings} />
       case 'settings':
@@ -82,7 +95,9 @@ function App() {
       {window.electronAPI?.isElectron && <UpdateBanner />}
       <Sidebar active={page} onNavigate={setPage} companyName={settings.companyName} companyLogo={settings.companyLogo} />
       <main className="main-content">
-        {renderPage()}
+        <Suspense fallback={<div className="page loading-page">Cargando...</div>}>
+          {renderPage()}
+        </Suspense>
       </main>
     </div>
   )
