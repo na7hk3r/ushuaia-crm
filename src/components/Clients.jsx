@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { exportCSV } from '../utils/exportCSV'
 import { calculateOrderProfit, findProductByRef, getActiveProducts, getProductDisplayName, getProductPrice } from '../utils/products.js'
@@ -6,10 +6,11 @@ import { calculateOrderProfit, findProductByRef, getActiveProducts, getProductDi
 const emptyClient = {
   name: '', contact: '', email: '', phone: '', address: '', category: 'minorista', notes: '', orders: []
 }
+const NO_ACTIVE_PRODUCTS_MESSAGE = 'Primero agrega o restaura un producto activo en Stock.'
 
 export default function Clients({ clients, setClients, settings, products }) {
   const clientCategories = settings?.clientCategories || ['distribuidor', 'minorista', 'gastronomia', 'supermercado', 'mayorista']
-  const activeProducts = getActiveProducts(products || [])
+  const activeProducts = useMemo(() => getActiveProducts(products || []), [products])
   const defaultPriceType = settings?.defaultPriceType === 'wholesale' ? 'wholesale' : 'retail'
   const [view, setView] = useState('list') // list | form | detail
   const [selected, setSelected] = useState(null)
@@ -19,6 +20,7 @@ export default function Clients({ clients, setClients, settings, products }) {
   const [showOrderForm, setShowOrderForm] = useState(false)
   const [orderForm, setOrderForm] = useState({ productId: '', product: '', quantity: '', total: '', deliveryDate: '', priceType: defaultPriceType })
   const [orderError, setOrderError] = useState('')
+  const visibleOrderError = activeProducts.length > 0 && orderError === NO_ACTIVE_PRODUCTS_MESSAGE ? '' : orderError
 
   const filtered = clients.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -251,7 +253,7 @@ export default function Clients({ clients, setClients, settings, products }) {
                 if (!showOrderForm) {
                   resetOrderForm()
                   if (activeProducts.length === 0) {
-                    setOrderError('Primero agrega o restaura un producto activo en Stock.')
+                    setOrderError(NO_ACTIVE_PRODUCTS_MESSAGE)
                   }
                 }
                 setShowOrderForm(!showOrderForm)
@@ -263,7 +265,7 @@ export default function Clients({ clients, setClients, settings, products }) {
 
             {showOrderForm && (
               <form className="order-inline-form" onSubmit={handleAddOrder}>
-                {orderError && <p className="form-error">{orderError}</p>}
+                {visibleOrderError && <p className="form-error">{visibleOrderError}</p>}
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Producto</label>
